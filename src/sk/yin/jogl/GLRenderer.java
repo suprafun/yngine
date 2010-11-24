@@ -14,6 +14,7 @@ import sk.yin.jogl.scene.ParticleUnitSceneNode;
 import sk.yin.jogl.scene.SceneCamera;
 import sk.yin.jogl.scene.SceneGraph;
 import sk.yin.jogl.scene.SceneObject;
+import sk.yin.jogl.shaders.Shader;
 
 /**
  * GLRenderer.java <BR>
@@ -58,8 +59,8 @@ public class GLRenderer implements GLEventListener {
         gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL.GL_SHININESS, new float[]{35.0f}, 0);
 
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, new float[]{0.0f, 0.0f, 0.0f, 1.0f}, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, new float[]{0.5f, 0.5f, 0.5f, 1.0f}, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, new float[]{0.1f, 0.1f, 0.1f, 1.0f}, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{0.0f, 4.0f, 3.0f, 1.0f}, 0);
 
         //
@@ -68,6 +69,10 @@ public class GLRenderer implements GLEventListener {
         for (int i = 0; i < MODEL_NUM; i++) {
             SphereModelFactory.BasePolyhedron base = SphereModelFactory.BasePolyhedron.values()[i];
             s[i] = SphereModelFactory.getInstance().createSphere(13.0f, 5, base);
+            if(i == 1) {
+                Shader shader = new Shader(gl);
+                s[i].setShader(shader);
+            }
         }
         r = 0;
 
