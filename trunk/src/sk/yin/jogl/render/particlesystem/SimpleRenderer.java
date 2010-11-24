@@ -46,7 +46,7 @@ public class SimpleRenderer implements IParticleSystemRenderer {
     }
 
     protected void postRender(GL gl) {
-        gl.glEnable(GL.GL_LIGHTING);
+        //gl.glEnable(GL.GL_LIGHTING);
         gl.glPointSize(1.0f);
     }
 }

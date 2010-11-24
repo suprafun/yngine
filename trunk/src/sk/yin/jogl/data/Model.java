@@ -5,6 +5,7 @@
 
 package sk.yin.jogl.data;
 
+import sk.yin.jogl.shaders.Shader;
 import javax.media.opengl.GL;
 
 /**
@@ -42,6 +43,15 @@ public class Model {
     private float[] normals;
     private float[] colors;
     private int[] faces;
+    private Shader shader;
+
+    public Shader getShader() {
+        return shader;
+    }
+
+    public void setShader(Shader shader) {
+        this.shader = shader;
+    }
 
     public enum ModelLayout {
         NoLayout(0),
@@ -86,6 +96,11 @@ public class Model {
             cidx /* Color index */ = 0,
             flen /* Face data lengths */ = 3 + normalLayout.len + colorLayout.len;
         boolean first = false;
+
+       if(shader != null) {
+           shader.ad(gl, true);
+       }
+
         gl.glBegin(gl.GL_TRIANGLES);
         for(int i = 0; i < faces.length; i += flen) {
             for(int voff = i; voff < i+3; voff++) {
@@ -130,5 +145,10 @@ public class Model {
             }
         }
         gl.glEnd();
+
+
+       if(shader != null) {
+           shader.ad(gl, false);
+       }
     }
 }
