@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-// TODO(magyi): Implement NoLayout, PerFace and PerFaceVertice ModelLayouts
+// TODO(magyi): Implement Absent, PerFace and PerFaceVertice ModelLayouts
 public class ModelBuilder {
     private List<Point3f> vertices = new ArrayList<Point3f>();
     public List<Integer> verticleCache = new ArrayList<Integer>();
@@ -33,7 +33,7 @@ public class ModelBuilder {
 
     public int _generateSomeVertexColor(Point3f v) {
         Point3f c = new Point3f();
-        //*
+        /*
         float rr = (float) (Math.random() / 3 - (1.0 / 6));
         float rg = (float) (Math.random() / 3 - (1.0 / 6));
         float rb = (float) (Math.random() / 3 - (1.0 / 6));
@@ -42,9 +42,10 @@ public class ModelBuilder {
         c.z = (float) Math.random();
         /*/
         float rr = (float) Math.sin(Math.PI * v.x * 2) / 4;
-        c.x = v.x / 2 + 0.5f + rr;
-        c.y = v.y / 2 + 0.5f + rr;
-        c.z = v.z / 2 + 0.5f + rr;
+        rr = 0;
+        c.x = (float) Math.sin(v.x*3);
+        c.y = (float) Math.sin(v.y*3);
+        c.z = (float) Math.sin(v.z*3);
         //*/
 
         return addColor(c);
