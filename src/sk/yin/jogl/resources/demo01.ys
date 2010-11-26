@@ -1,0 +1,49 @@
+// SmallTalk proposal
+Sphere: sphere0 iterate: 5 from: OCTAHEDRON
+sphere0 Texture: tex1 coords: sphere0.normals clamp: repeat
+
+Sphere: sphere1 iterate: 5 from: OCTAHEDRON
+sphere1 Shader: DEFAULT_SHADER_PROGRAM
+
+Texture: tex1 file: "tex1.png"
+
+Scene: scene add: sphere0, sphere1
+
+// JSON proposal
+{
+    "version": "0.1",
+    "resources": [
+        {
+            "name": "sphere0",
+            "type": "model",
+            "generator": {
+                "class": "Sphere",
+                "params": {
+                    "iterations": 5,
+                    "base": "OCTAHEDRON"
+                }
+            }
+        },
+        {
+            "name": "sphere1",
+            "type": "model",
+            "generator": {
+                "class": "Sphere",
+                "params": {
+                    "iterations": 5,
+                    "base": "OCTAHEDRON"
+                }
+            }
+        },
+        {
+            "name": "tex1",
+            "type": "texture",
+            "generator": {
+                "class": "Image",
+                "params": {
+                    "file": "tex1.png"
+                }
+            }
+        }
+    ]
+}

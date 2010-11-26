@@ -2,10 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package sk.yin.jogl.data;
 
-import sk.yin.jogl.shaders.Shader;
+import com.sun.opengl.util.texture.Texture;
+import sk.yin.jogl.shaders.ShaderProgram;
 import javax.media.opengl.GL;
 
 /**
@@ -38,29 +38,36 @@ public class Model {
     //              -> (c)
     //            => colorLayout=PerFaceVerticle
     //              -> (Ac, Bc, Cc)
-
     private float[] vertices;
     private float[] normals;
     private float[] colors;
     private int[] faces;
-    private Shader shader;
+    private ShaderProgram shader;
+    private Texture texture;
 
-    public Shader getShader() {
+    public ShaderProgram getShader() {
         return shader;
     }
 
-    public void setShader(Shader shader) {
+    public void setShader(ShaderProgram shader) {
         this.shader = shader;
     }
 
+    public Texture getTexture() {
+        return texture;
+    }
+
+    public void setTexture(Texture texture) {
+        this.texture = texture;
+    }
+
     public enum ModelLayout {
-        NoLayout(0),
+        Absent(0),
         VerticleBound(0),
         PerFaceVerticle(1),
         PerFace(3);
-
         public final int len;
-        
+
         private ModelLayout(int len) {
             this.len = len;
         }
@@ -69,17 +76,18 @@ public class Model {
     private ModelLayout colorLayout;
 
     public Model() {
-        vertices = normals = colors = new float[] {};
-        faces = new int[] {};
-        normalLayout = colorLayout = ModelLayout.NoLayout;
+        vertices = normals = colors = new float[]{};
+        faces = new int[]{};
+        normalLayout = colorLayout = ModelLayout.Absent;
     }
-    
+
     public Model(float[] vertexes, int[] triangles) {
         this.vertices = vertexes;
         this.faces = triangles;
-        normals = colors = new float[] {};
-        normalLayout = colorLayout = ModelLayout.NoLayout;
+        normals = colors = new float[]{};
+        normalLayout = colorLayout = ModelLayout.Absent;
     }
+
     public Model(float[] vertices, float[] normals, float[] colors,
             int[] faces, ModelLayout normalLayout, ModelLayout colorLayout) {
         this.vertices = vertices;
@@ -92,18 +100,26 @@ public class Model {
 
     public void render(GL gl) {
         int vidx /* Verticle index */ = 0,
-            nidx /* Normal index */ = 0,
-            cidx /* Color index */ = 0,
-            flen /* Face data lengths */ = 3 + normalLayout.len + colorLayout.len;
+                nidx /* Normal index */ = 0,
+                cidx /* Color index */ = 0,
+                flen /* Face data lengths */ =
+                3 + normalLayout.len + colorLayout.len;
         boolean first = false;
 
-       if(shader != null) {
-           shader.ad(gl, true);
-       }
+        if(texture != null) {
+            texture.enable();
+            texture.bind();
+        }
+
+        if (shader != null) {
+            shader.use(gl);
+        } else {
+            ShaderProgram.unuseCurrent(gl);
+        }
 
         gl.glBegin(gl.GL_TRIANGLES);
-        for(int i = 0; i < faces.length; i += flen) {
-            for(int voff = i; voff < i+3; voff++) {
+        for (int i = 0; i < faces.length; i += flen) {
+            for (int voff = i; voff < i + 3; voff++) {
                 first = (voff == i);
                 vidx = 3 * faces[voff];
 
@@ -111,34 +127,46 @@ public class Model {
                 if (normalLayout == ModelLayout.VerticleBound
                         && vidx < normals.length) {
                     nidx = vidx;
-                } else if (colorLayout == ModelLayout.PerFace
-                        && first) {
-                    nidx = faces[i + 3];
-                } else if (normalLayout == ModelLayout.PerFaceVerticle) {
-                    nidx = faces[voff + 3];
+                } else {
+                    if (colorLayout == ModelLayout.PerFace
+                            && first) {
+                        nidx = faces[i + 3];
+                    } else {
+                        if (normalLayout == ModelLayout.PerFaceVerticle) {
+                            nidx = faces[voff + 3];
+                        }
+                    }
                 }
 
                 // Colors
                 if (colorLayout == ModelLayout.VerticleBound
                         && vidx < colors.length) {
                     cidx = vidx;
-                } else if (colorLayout == ModelLayout.PerFace
-                        && first) {
-                    cidx = faces[i + 3 + normalLayout.len];
-                } else if (colorLayout == ModelLayout.PerFaceVerticle) {
-                    cidx = faces[voff + 3 + normalLayout.len];
-                }
-
-
-                if (normalLayout != ModelLayout.NoLayout) {
-                    if(first || normalLayout != ModelLayout.PerFace) {
-                        gl.glNormal3f(normals[nidx], normals[nidx + 1], normals[nidx + 2]);
+                } else {
+                    if (colorLayout == ModelLayout.PerFace
+                            && first) {
+                        cidx = faces[i + 3 + normalLayout.len];
+                    } else {
+                        if (colorLayout == ModelLayout.PerFaceVerticle) {
+                            cidx = faces[voff + 3 + normalLayout.len];
+                        }
                     }
                 }
 
-                if (colorLayout != ModelLayout.NoLayout) {
-                    if(first || colorLayout != ModelLayout.PerFace)
+                if (normalLayout != ModelLayout.Absent) {
+                    if (first || normalLayout != ModelLayout.PerFace) {
+                        gl.glNormal3f(normals[nidx], normals[nidx + 1], normals[nidx + 2]);
+
+                        if(texture != null) {
+                            gl.glTexCoord2f(normals[nidx], normals[nidx + 1]);
+                        }
+                    }
+                }
+
+                if (colorLayout != ModelLayout.Absent) {
+                    if (first || colorLayout != ModelLayout.PerFace) {
                         gl.glColor3f(colors[cidx], colors[cidx + 1], colors[cidx + 2]);
+                    }
                 }
 
                 gl.glVertex3f(vertices[vidx], vertices[vidx + 1], vertices[vidx + 2]);
@@ -146,9 +174,8 @@ public class Model {
         }
         gl.glEnd();
 
-
-       if(shader != null) {
-           shader.ad(gl, false);
-       }
+        if(texture != null) {
+            texture.disable();
+        }
     }
 }

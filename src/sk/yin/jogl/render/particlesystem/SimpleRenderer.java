@@ -2,6 +2,7 @@ package sk.yin.jogl.render.particlesystem;
 
 import javax.media.opengl.GL;
 import sk.yin.jogl.data.Point3f;
+import sk.yin.jogl.shaders.ShaderProgram;
 
 /**
  *
@@ -40,13 +41,14 @@ public class SimpleRenderer implements IParticleSystemRenderer {
     }
 
     protected void preRender(GL gl) {
+        ShaderProgram.unuseCurrent(gl);
         gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         gl.glDisable(GL.GL_LIGHTING);
         gl.glPointSize(1.5f);
     }
 
     protected void postRender(GL gl) {
-        //gl.glEnable(GL.GL_LIGHTING);
+        gl.glEnable(GL.GL_LIGHTING);
         gl.glPointSize(1.0f);
     }
 }
