@@ -21,8 +21,7 @@ public interface ISceneTransformation {
     public void setPy(float py);
     public float getPz();
     public void setPz(float pz) ;
-    public float getR();
-    public void setR(float r);
+
     public float getRx();
     public void setRx(float rx);
     public float getRy();

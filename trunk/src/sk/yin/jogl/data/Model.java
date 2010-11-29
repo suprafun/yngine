@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package sk.yin.jogl.data;
 
 import com.sun.opengl.util.texture.Texture;
@@ -44,6 +40,7 @@ public class Model {
     private int[] faces;
     private ShaderProgram shader;
     private Texture texture;
+    private boolean zCorrectCoord;
 
     public ShaderProgram getShader() {
         return shader;
@@ -59,6 +56,28 @@ public class Model {
 
     public void setTexture(Texture texture) {
         this.texture = texture;
+    }
+
+    public float[] colors() {
+        return colors;
+    }
+
+    public void textureZCorrectCoord(boolean zCorrectCoord) {
+        this.zCorrectCoord = zCorrectCoord;
+    }
+
+    /**
+     * Computes D - the texture coordinate correction coefficient.
+     *
+     * @param nz
+     * @return
+     */
+    private float getTextureCorrection(float nz) {
+        if (zCorrectCoord) {
+            return 1.0f / (float) (Math.sin(Math.abs(nz)) + 1.0f);
+        } else {
+            return 1;
+        }
     }
 
     public enum ModelLayout {
@@ -106,7 +125,7 @@ public class Model {
                 3 + normalLayout.len + colorLayout.len;
         boolean first = false;
 
-        if(texture != null) {
+        if (texture != null) {
             texture.enable();
             texture.bind();
         }
@@ -157,8 +176,11 @@ public class Model {
                     if (first || normalLayout != ModelLayout.PerFace) {
                         gl.glNormal3f(normals[nidx], normals[nidx + 1], normals[nidx + 2]);
 
-                        if(texture != null) {
-                            gl.glTexCoord2f(normals[nidx], normals[nidx + 1]);
+                        if (texture != null) {
+                            float d = this.getTextureCorrection(normals[nidx + 2]),
+                                    s = normals[nidx] * d,
+                                    t = normals[nidx + 1] * d;
+                            gl.glTexCoord2f(s, t);
                         }
                     }
                 }
@@ -174,7 +196,7 @@ public class Model {
         }
         gl.glEnd();
 
-        if(texture != null) {
+        if (texture != null) {
             texture.disable();
         }
     }

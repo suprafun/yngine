@@ -14,7 +14,7 @@ import sk.yin.jogl.data.Model;
  */
 public class SceneObject implements ISceneNode, ISceneTransformation {
     private Model model;
-    private float px, py, pz, rx, ry, rz, r;
+    private float px, py, pz, rx, ry, rz;
 
     public SceneObject(Model model) {
         this.model = model;
@@ -32,10 +32,13 @@ public class SceneObject implements ISceneNode, ISceneTransformation {
 
     public void transform(GL gl) {
         gl.glPushMatrix();
-        //if(px!=0 || py!=0 || pz!=0)
+        if(px!=0 || py!=0 || pz!=0)
             gl.glTranslatef(px, py, pz);
-        //if(r!=0 && (rx!=0 || ry!=0 || rz!=0))
-            gl.glRotatef(r, rx, ry, rz);
+        if(rx!=0 || ry!=0 || rz!=0) {
+            gl.glRotatef(rx, 1.0f, 0.0f, 0.0f);
+            gl.glRotatef(ry, 0.0f, 1.0f, 0.0f);
+            gl.glRotatef(rz, 0.0f, 0.0f, 1.0f);
+        }
     }
 
     public void transformEnd(GL gl) {
@@ -65,14 +68,6 @@ public class SceneObject implements ISceneNode, ISceneTransformation {
 
     public void setPz(float pz) {
         this.pz = pz;
-    }
-
-    public float getR() {
-        return r;
-    }
-
-    public void setR(float r) {
-        this.r = r;
     }
 
     public float getRx() {
