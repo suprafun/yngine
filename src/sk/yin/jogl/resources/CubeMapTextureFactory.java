@@ -10,6 +10,7 @@ import com.sun.opengl.util.texture.TextureData;
 import com.sun.opengl.util.texture.TextureIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL;
 
@@ -35,7 +36,7 @@ public class CubeMapTextureFactory {
         return instance;
     }
 
-    public void loadImage(String filename) throws IOException {
+    public Texture loadImage(URL url) throws IOException {
         int[] coords = new int[] {
             512, 512, GL.GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
             1536, 512, GL.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
@@ -45,7 +46,7 @@ public class CubeMapTextureFactory {
             1024, 512, GL.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
         };
         BufferedImage side,
-                image = ImageIO.read(getClass().getResource(filename));
+                image = ImageIO.read(url);
 
         Texture texture = TextureIO.newTexture(GL.GL_TEXTURE_CUBE_MAP);
         gl.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1);
@@ -61,7 +62,9 @@ public class CubeMapTextureFactory {
         for(int i = 0; i < coords.length; i += 3) {
             side = image.getSubimage(coords[i], coords[i+1], 512, 512);
             TextureData sideData = TextureIO.newTextureData(side, false);
-            texture.updateImage(sideData, coords[i+3]);
+            texture.updateImage(sideData, coords[i+2]);
         }
+
+        return texture;
     }
 }

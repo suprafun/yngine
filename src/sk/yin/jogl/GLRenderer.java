@@ -1,6 +1,8 @@
 package sk.yin.jogl;
 
 import com.sun.opengl.util.texture.Texture;
+import java.io.IOException;
+import java.net.URL;
 import sk.yin.jogl.resources.SphereModelFactory;
 import sk.yin.jogl.data.Model;
 import javax.media.opengl.GL;
@@ -8,16 +10,16 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 import sk.yin.jogl.data.Point3f;
+import sk.yin.jogl.files.ResourceGetter;
 import sk.yin.jogl.render.particlesystem.ParticleUnit;
 import sk.yin.jogl.render.particlesystem.SimpleConfig;
 import sk.yin.jogl.render.particlesystem.SimpleFactory;
+import sk.yin.jogl.resources.CubeMapTextureFactory;
 import sk.yin.jogl.resources.TextureLoader;
 import sk.yin.jogl.scene.ParticleUnitSceneNode;
 import sk.yin.jogl.scene.SceneCamera;
 import sk.yin.jogl.scene.SceneGraph;
 import sk.yin.jogl.scene.SceneObject;
-import sk.yin.jogl.shaders.ShaderFactory;
-import sk.yin.jogl.shaders.ShaderProgram;
 
 /**
  * GLRenderer.java <BR>
@@ -36,8 +38,7 @@ public class GLRenderer implements GLEventListener {
             //*
             GL.GL_FRONT /*/
             GL.GL_FRONT_AND_BACK
-            //*/
-            ;
+            //*/;
     private int steps;
 
     private enum MaterialDef {
@@ -47,26 +48,26 @@ public class GLRenderer implements GLEventListener {
         Glass(0.3f, 0.7f, 0.7f, 32.00f, 1.0f, 199, 227, 208),
         Plastic(0.3f, 0.9f, 0.9f, 32.0f, 1.0f, 0, 19, 252),
         Pearl(1.5f, -0.5f, 2.0f, 99.0f, 1.0f, 255, 138, 138),
-        Full(0.2f, 0.7f, 0.7f, 32.0f, 1.0f, 255, 255, 255),
-        Half(0.1f, 0.4f, 0.4f, 16.0f, 1.0f, 255, 255, 255);
-
-        public final float a[], d[], s[], sh, br, c[];
+        Full(0.2f, 0.7f, 0.7f, 16.0f, 1.0f, 255, 255, 255),
+        Half(0.1f, 0.4f, 0.6f, 32.0f, 1.0f, 255, 255, 255);
+        public final float ambient[], diffuse[], specular[], shininess, briliance, c[];
 
         MaterialDef(float ambient, float diffuse, float specular, float shinines,
                 float brilliance, int r, int g, int b) {
-            a = new float[]{ambient, ambient, ambient, 1.0f};
-            d = new float[]{diffuse, diffuse, diffuse, 1.0f};
-            s = new float[]{specular, specular, specular, 1.0f};
-            sh = shinines;
-            br = brilliance;
-            c = new float[]{(float) r, (float) g, (float) b, 1.0f};
+            this.ambient = new float[]{ambient, ambient, ambient, 1.0f};
+            this.diffuse = new float[]{diffuse, diffuse, diffuse, 1.0f};
+            this.specular = new float[]{specular, specular, specular, 1.0f};
+            this.shininess = shinines;
+            this.briliance = brilliance;
+            c =
+                    new float[]{(float) r / 255, (float) g / 255, (float) b / 512, 1.0f};
         }
 
         public void use(GL gl) {
-            gl.glMaterialfv(glFace, GL.GL_AMBIENT, a, 0);
-            gl.glMaterialfv(glFace, GL.GL_DIFFUSE, d, 0);
-            gl.glMaterialfv(glFace, GL.GL_SPECULAR, s, 0);
-            gl.glMaterialfv(glFace, GL.GL_SHININESS, new float[] { sh }, 0);
+            gl.glMaterialfv(glFace, GL.GL_AMBIENT, ambient, 0);
+            gl.glMaterialfv(glFace, GL.GL_DIFFUSE, diffuse, 0);
+            gl.glMaterialfv(glFace, GL.GL_SPECULAR, specular, 0);
+            gl.glMaterialfv(glFace, GL.GL_SHININESS, new float[]{shininess}, 0);
         }
     }
 
@@ -89,11 +90,13 @@ public class GLRenderer implements GLEventListener {
 
         gl.glEnable(gl.GL_LIGHTING);
         gl.glEnable(gl.GL_LIGHT0);
+        gl.glLightModeli(GL.GL_LIGHT_MODEL_COLOR_CONTROL,
+                GL.GL_SEPARATE_SPECULAR_COLOR);
 
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{-0.5f, 4.0f, 3.0f, 1.0f}, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{2.0f, 2.5f, 3.0f, 0.0f}, 0);
 
         MaterialDef.Full.use(gl);
         gl.glColorMaterial(glFace, GL.GL_DIFFUSE);
@@ -103,23 +106,49 @@ public class GLRenderer implements GLEventListener {
         //
         // Models
         //
+        URL url;
+        String filenames[] = new String[] {
+//            "tex05-c.png",
+            "tex05.png",
+            //"tex04.2.png",
+//            "tex04.png",
+            "tex03.png",
+            "tex2.png",
+            "tex1.png"};
+        Texture texture = null,
+                t = null;
+        url = ResourceGetter.getFirstResourcePresent(filenames);
+        if (url != null) {
+            texture = TextureLoader.getInstance().load(url);
+            texture.setTexParameteri(GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
+            texture.setTexParameteri(GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+        }
+        url = ResourceGetter.getFirstResourcePresent(new String[] { "escher.cubemap.jpg" });
+        try {
+            t = CubeMapTextureFactory.getInstance(gl).loadImage(url);
+        }catch(IOException ex) {
+            ex.printStackTrace();
+        }
         for (int i = 0; i < MODEL_NUM; i++) {
-            SphereModelFactory.BasePolyhedron base =
-                    /*
-                    SphereModelFactory.BasePolyhedron.values()[i];
-                    /*/
-                    SphereModelFactory.BasePolyhedron.OCTAHEDRON;
-            //*/
-            s[i] = SphereModelFactory.getInstance().createSphere(13.0f, 5, base);
+            SphereModelFactory.BasePolyhedron base = SphereModelFactory.BasePolyhedron.OCTAHEDRON;
+            s[i] = SphereModelFactory.getInstance().createSphere(13.0f, 10, base);
+
+            // Post process FIXME
+            s[i].setTexture(t);
+
+            float c[] = s[i].colors();
+            for (int j = 0; j < c.length; j++) {
+                c[j] = 1.0f;
+            }
             if (i == 1) {
+                /*
                 ShaderProgram shader =
-                        ShaderFactory.getInstance().createShaderProgram(gl);
+                ShaderFactory.getInstance().createShaderProgram(gl);
                 s[i].setShader(shader);
+                 */
+                s[i].textureZCorrectCoord(false);
             } else {
-                Texture texture = TextureLoader.getInstance().load("C:\\Users\\yin\\tex2.png");
-                texture.setTexParameteri(GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
-                texture.setTexParameteri(GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
-                s[i].setTexture(texture);
+                s[i].textureZCorrectCoord(true);
             }
         }
         r = 0;
@@ -187,19 +216,23 @@ public class GLRenderer implements GLEventListener {
 
         GL gl = drawable.getGL();
 
-        if (frames % 50 == 0) {
+        int interval = 1000;
+        if (t0 % interval > t1 % interval) {
             System.out.println("fps: " + 1 / dt + " deltaTime: " + dt);
-            if ((++steps % 10) < 5)
+            if ((++steps % 10) < 5) {
                 MaterialDef.Full.use(gl);
-            else
+            } else {
                 MaterialDef.Half.use(gl);
+            }
 
         }
 
-        r += dt;
+        r += (dt*5);
         //int i0 = ((int)r / 100) % 10;
         for (int i = 0; i < MODEL_NUM; i++) {
-            so[i].setR(r * 10);
+            so[i].setRx(r * 2);
+            so[i].setRy(r * 3);
+            so[i].setRz(r * 5);
         }
 
         // Clear the drawing area
