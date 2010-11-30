@@ -22,4 +22,4 @@ void main() {
                 pow(NdotHV, gl_FrontMaterial.shininess);
     }
     gl_FragColor = color;
-};
+}

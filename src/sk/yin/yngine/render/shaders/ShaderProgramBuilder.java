@@ -56,19 +56,6 @@ public class ShaderProgramBuilder {
         }
     }
 
-    protected void printBuildInfoLog(GL gl, int obj) {
-        IntBuffer l = IntBuffer.allocate(1),
-                n = IntBuffer.allocate(1);
-        gl.glGetObjectParameterivARB(obj, GL.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
-        if (l.get(0) > 0) {
-            ByteBuffer log = ByteBuffer.allocate(l.get(0));
-            gl.glGetInfoLogARB(obj, l.get(0), n, null);
-            byte[] ary = new byte[log.remaining()];
-            log.get(ary);
-            Log.log("Shader compile/link log #" + obj + " len(" + ary.length + " " + log.remaining() + "): " + new String(ary));
-        }
-    }
-
     public ShaderProgram buildShaderProgram(GL gl) {
         int program = gl.glCreateProgramObjectARB(),
                 vs[] = compileSourceList(gl, vertexShaderSources, ShaderType.VERTEX, program),
@@ -92,5 +79,22 @@ public class ShaderProgramBuilder {
                 gl.glAttachObjectARB(program, shaders[i]);
         }
         return shaders;
+    }
+
+    protected void printBuildInfoLog(GL gl, int obj) {
+        IntBuffer l = IntBuffer.allocate(1),
+                n = IntBuffer.allocate(1);
+        int len = 0;
+
+        gl.glGetObjectParameterivARB(obj, GL.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
+        len = l.get(0);
+        if (len > 0) {
+            ByteBuffer log = ByteBuffer.allocate(len);
+            gl.glGetInfoLogARB(obj, len, n, log);
+
+            byte[] ary = new byte[log.remaining()];
+            log.get(ary);
+            Log.log("Shader compile/link log #" + obj + " len(" + ary.length + "): " + new String(ary));
+        }
     }
 }
