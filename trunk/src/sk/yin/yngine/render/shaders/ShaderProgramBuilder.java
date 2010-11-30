@@ -5,16 +5,22 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.GL;
+import sk.yin.yngine.util.Log;
 
 /**
+ * ShaderProgramBuilder is used to build up ShaderProgram instances from shader
+ * sources.
  *
- * @author yin
+ * @author Matej 'Yin' Gagyi (matej.gagyi@gmail.com)
  */
 public class ShaderProgramBuilder {
     private List<String> vertexShaderSources = new ArrayList<String>();
     private List<String> fragmentShaderSources = new ArrayList<String>();
     private static final int NO_SHADER_PROGRAM = -1;
 
+    /**
+     * Enumeration for vertex and fragment shaders.
+     */
     public enum ShaderType {
         VERTEX(GL.GL_VERTEX_SHADER_ARB),
         FRAGMENT(GL.GL_FRAGMENT_SHADER_ARB);
@@ -25,9 +31,20 @@ public class ShaderProgramBuilder {
         }
     };
 
+    /**
+     * Constructs an empty ShaderProgramBuilder.
+     */
     public ShaderProgramBuilder() {
     }
 
+    /**
+     * Adds the shader program code in <code>source</code> to shader sources
+     * categorized by value of <code>type</code>.
+     * @param type Vertex, or Fragment shader.
+     * @param source Shader source code.
+     * @return Return value of the collection operation (true if successful), or
+     *      false, if couldn't determine destination collection.
+     */
     public boolean addShaderSource(ShaderType type, String source) {
         switch (type) {
             case VERTEX:
@@ -48,7 +65,7 @@ public class ShaderProgramBuilder {
             gl.glGetInfoLogARB(obj, l.get(0), n, null);
             byte[] ary = new byte[log.remaining()];
             log.get(ary);
-            System.out.println("Shader log " + obj + " len(" + ary.length + "): " + new String(ary));
+            Log.log("Shader compile/link log #" + obj + " len(" + ary.length + " " + log.remaining() + "): " + new String(ary));
         }
     }
 

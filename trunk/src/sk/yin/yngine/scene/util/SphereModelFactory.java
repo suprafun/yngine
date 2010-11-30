@@ -19,7 +19,6 @@ import java.util.List;
 public class SphereModelFactory {
     private static SphereModelFactory instance;
 
-    // TODO(mgagyi): Clean up base polyhedron definitions.
     private static final float octahedronVertices[] = {
            0.0f, -1.0f,  0.0f,
            1.0f,  0.0f,  0.0f,

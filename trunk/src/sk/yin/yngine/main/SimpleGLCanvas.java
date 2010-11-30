@@ -20,7 +20,6 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
@@ -38,13 +37,15 @@ public class SimpleGLCanvas extends JFrame {
     }
     
     private Animator animator;
+    private GLRenderer glRenderer;
 
     /** Creates new form MainFrame */
     public SimpleGLCanvas() {
         initComponents();
         setTitle("Simple JOGL Application");
 
-        canvas.addGLEventListener(new GLRenderer());
+        glRenderer = new GLRenderer();
+        canvas.addGLEventListener(glRenderer);
         animator = new Animator(canvas);
 
         // This is a workaround for the GLCanvas not adjusting its size, when the frame is resized.
@@ -60,6 +61,7 @@ public class SimpleGLCanvas extends JFrame {
                 new Thread(new Runnable() {
 
                     public void run() {
+                        glRenderer.destroy(canvas.getGL());
                         animator.stop();
                         System.exit(0);
                     }
