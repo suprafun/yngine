@@ -3,7 +3,6 @@
  *
  * Created on 30. Juli 2008, 16:18
  */
-
 package sk.yin.yngine.main;
 
 import com.sun.opengl.util.Animator;
@@ -29,13 +28,11 @@ import javax.swing.WindowConstants;
  * @author mbien
  */
 public class SimpleGLCanvas extends JFrame {
-
     static {
         // When using a GLCanvas, we have to set the Popup-Menues to be HeavyWeight,
         // so they display properly on top of the GLCanvas
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
     }
-    
     private Animator animator;
     private GLRenderer glRenderer;
 
@@ -49,19 +46,18 @@ public class SimpleGLCanvas extends JFrame {
         animator = new Animator(canvas);
 
         // This is a workaround for the GLCanvas not adjusting its size, when the frame is resized.
-        canvas.setMinimumSize(new Dimension());         
-        
-        this.addWindowListener(new WindowAdapter() {
+        canvas.setMinimumSize(new Dimension());
 
+        this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                canvas.getContext().makeCurrent();
+                glRenderer.destroy(canvas.getGL());
                 // Run this on another thread than the AWT event queue to
                 // make sure the call to Animator.stop() completes before
                 // exiting
                 new Thread(new Runnable() {
-
                     public void run() {
-                        glRenderer.destroy(canvas.getGL());
                         animator.stop();
                         System.exit(0);
                     }
@@ -71,12 +67,14 @@ public class SimpleGLCanvas extends JFrame {
     }
 
     @Override
-    public void setVisible(boolean show){
-        if(!show)
+    public void setVisible(boolean show) {
+        if (!show) {
             animator.stop();
+        }
         super.setVisible(show);
-        if(show)
+        if (show) {
             animator.start();
+        }
     }
 
     /** This method is called from within the constructor to
@@ -97,19 +95,9 @@ public class SimpleGLCanvas extends JFrame {
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(canvas, GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+                layout.createParallelGroup(Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addComponent(canvas, GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE).addContainerGap()));
         layout.setVerticalGroup(
-            layout.createParallelGroup(Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(canvas, GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+                layout.createParallelGroup(Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addComponent(canvas, GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE).addContainerGap()));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -121,7 +109,7 @@ public class SimpleGLCanvas extends JFrame {
      * @return Returns customized GLCapabilities.
      */
     private GLCapabilities createGLCapabilites() {
-        
+
         GLCapabilities capabilities = new GLCapabilities();
         capabilities.setHardwareAccelerated(true);
 
@@ -130,22 +118,22 @@ public class SimpleGLCanvas extends JFrame {
         capabilities.setSampleBuffers(false);
 
         capabilities.setDepthBits(32);
-        
+
         return capabilities;
     }
-    
+
     /**
-    * @param args the command line arguments
-    */
+     * @param args the command line arguments
+     */
     public static void main(String args[]) {
         // Run this in the AWT event thread to prevent deadlocks and race conditions
         EventQueue.invokeLater(new Runnable() {
             public void run() {
 
                 // switch to system l&f for native font rendering etc.
-                try{
+                try {
                     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                }catch(Exception ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(getClass().getName()).log(Level.INFO, "can not enable system look and feel", ex);
                 }
 
@@ -155,9 +143,7 @@ public class SimpleGLCanvas extends JFrame {
             }
         });
     }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private GLCanvas canvas;
     // End of variables declaration//GEN-END:variables
-
 }

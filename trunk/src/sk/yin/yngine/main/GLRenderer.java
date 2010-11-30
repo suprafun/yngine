@@ -2,6 +2,7 @@ package sk.yin.yngine.main;
 
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
+import javax.media.opengl.DebugGL;
 import sk.yin.yngine.scene.util.SphereModelFactory;
 import sk.yin.yngine.math.Model;
 import javax.media.opengl.GL;
@@ -35,6 +36,7 @@ public class GLRenderer implements GLEventListener {
     private static final int glFace = GL.GL_FRONT;
     private int steps;
     ShaderProgram shader;
+    private static final boolean DISABLE_SHADERS = false;
 
     private enum MaterialDef {
         Copper(0.3f, 0.7f, 0.6f, 6.0f, 1.8f, 228, 123, 87),
@@ -67,7 +69,7 @@ public class GLRenderer implements GLEventListener {
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
-        //drawable.setGL(new DebugGL(drawable.getGL()));
+        drawable.setGL(new DebugGL(drawable.getGL()));
 
         GL gl = drawable.getGL();
         System.err.println("INIT GL IS: " + gl.getClass().getName());
@@ -96,7 +98,6 @@ public class GLRenderer implements GLEventListener {
         gl.glColorMaterial(glFace, GL.GL_DIFFUSE);
         gl.glEnable(gl.GL_COLOR_MATERIAL);
 
-        //ShaderProgram.disableShaders(gl);
         //
         // Models
         //
@@ -121,6 +122,8 @@ public class GLRenderer implements GLEventListener {
         //
         // Shaders
         //
+        if(DISABLE_SHADERS)
+            ShaderProgram.disableShaders(gl);
         shader = ShaderFactory.getInstance().createShaderProgram(gl);
 
         // TODO(mgagyi): Implement cube-map loading
@@ -137,7 +140,7 @@ public class GLRenderer implements GLEventListener {
             SphereModelFactory.BasePolyhedron base =
                     SphereModelFactory.BasePolyhedron.OCTAHEDRON;
             s[i] = SphereModelFactory.getInstance()
-                    .createSphere(13.0f, 3, base);
+                    .createSphere(13.0f, 5, base);
 
             // Post process FIXME
             //if(i != 1)
