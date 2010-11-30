@@ -173,4 +173,8 @@ public class Point3f {
         z = b;
         return this;
     }
+
+    public float[] toArray() {
+        return new float[] { x, y, z };
+    }
 }

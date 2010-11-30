@@ -128,9 +128,12 @@ public class Model {
         if (texture != null) {
             texture.enable();
             texture.bind();
+        } else {
+            gl.glDisable(GL.GL_TEXTURE_2D);
         }
 
         if (shader != null) {
+            //gl.gl(0);
             shader.use(gl);
         } else {
             ShaderProgram.unuseCurrent(gl);

@@ -1,7 +1,6 @@
 package sk.yin.yngine.main;
 
 import com.sun.opengl.util.texture.Texture;
-import java.io.IOException;
 import java.net.URL;
 import sk.yin.yngine.scene.util.SphereModelFactory;
 import sk.yin.yngine.math.Model;
@@ -14,18 +13,17 @@ import sk.yin.yngine.resources.ResourceGetter;
 import sk.yin.yngine.particlesystem.ParticleUnit;
 import sk.yin.yngine.particlesystem.SimpleConfig;
 import sk.yin.yngine.particlesystem.SimpleFactory;
-import sk.yin.yngine.scene.util.CubeMapTextureFactory;
+import sk.yin.yngine.render.shaders.ShaderFactory;
+import sk.yin.yngine.render.shaders.ShaderProgram;
 import sk.yin.yngine.scene.util.TextureLoader;
 import sk.yin.yngine.scene.ParticleUnitSceneNode;
 import sk.yin.yngine.scene.SceneCamera;
 import sk.yin.yngine.scene.SceneGraph;
 import sk.yin.yngine.scene.SceneObject;
+import sk.yin.yngine.util.Log;
 
 /**
- * GLRenderer.java <BR>
- * author: Brian Paul (converted to Java by Ron Cemer and Sven Goethel) <P>
- *
- * This version is equal to Brian Paul's version 1.2 1999/10/21
+ * Event loop hooks. Based on Brian Paul's and others code.
  */
 public class GLRenderer implements GLEventListener {
     private static final int MODEL_NUM = 2;
@@ -34,12 +32,9 @@ public class GLRenderer implements GLEventListener {
     float r;
     long t0 = 0, frames = 0;
     private SceneGraph scene;
-    private static final int glFace =
-            //*
-            GL.GL_FRONT /*/
-            GL.GL_FRONT_AND_BACK
-            //*/;
+    private static final int glFace = GL.GL_FRONT;
     private int steps;
+    ShaderProgram shader;
 
     private enum MaterialDef {
         Copper(0.3f, 0.7f, 0.6f, 6.0f, 1.8f, 228, 123, 87),
@@ -59,8 +54,7 @@ public class GLRenderer implements GLEventListener {
             this.specular = new float[]{specular, specular, specular, 1.0f};
             this.shininess = shinines;
             this.briliance = brilliance;
-            c =
-                    new float[]{(float) r / 255, (float) g / 255, (float) b / 512, 1.0f};
+            c = new float[]{(float) r / 255, (float) g / 255, (float) b / 512, 1.0f};
         }
 
         public void use(GL gl) {
@@ -107,11 +101,11 @@ public class GLRenderer implements GLEventListener {
         // Models
         //
         URL url;
-        String filenames[] = new String[] {
-//            "tex05-c.png",
+        String filenames[] = new String[]{
+            //"tex05-c.png",
             "tex05.png",
             //"tex04.2.png",
-//            "tex04.png",
+            //"tex04.png",
             "tex03.png",
             "tex2.png",
             "tex1.png"};
@@ -123,29 +117,39 @@ public class GLRenderer implements GLEventListener {
             texture.setTexParameteri(GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
             texture.setTexParameteri(GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
         }
-        url = ResourceGetter.getFirstResourcePresent(new String[] { "escher.cubemap.jpg" });
+
+        //
+        // Shaders
+        //
+        shader = ShaderFactory.getInstance().createShaderProgram(gl);
+
+        // TODO(mgagyi): Implement cube-map loading
+        //url = ResourceGetter.getFirstResourcePresent(new String[]{"escher.cubemap.jpg"});
+        /*
         try {
             t = CubeMapTextureFactory.getInstance(gl).loadImage(url);
-        }catch(IOException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
+        */
+        
         for (int i = 0; i < MODEL_NUM; i++) {
-            SphereModelFactory.BasePolyhedron base = SphereModelFactory.BasePolyhedron.OCTAHEDRON;
-            s[i] = SphereModelFactory.getInstance().createSphere(13.0f, 10, base);
+            SphereModelFactory.BasePolyhedron base =
+                    SphereModelFactory.BasePolyhedron.OCTAHEDRON;
+            s[i] = SphereModelFactory.getInstance()
+                    .createSphere(13.0f, 3, base);
 
             // Post process FIXME
-            s[i].setTexture(t);
+            //if(i != 1)
+                //s[i].setTexture(texture);
 
             float c[] = s[i].colors();
             for (int j = 0; j < c.length; j++) {
-                c[j] = 1.0f;
+
+                //c[j] = 1.0f;
             }
             if (i == 1) {
-                /*
-                ShaderProgram shader =
-                ShaderFactory.getInstance().createShaderProgram(gl);
                 s[i].setShader(shader);
-                 */
                 s[i].textureZCorrectCoord(false);
             } else {
                 s[i].textureZCorrectCoord(true);
@@ -218,7 +222,7 @@ public class GLRenderer implements GLEventListener {
 
         int interval = 1000;
         if (t0 % interval > t1 % interval) {
-            System.out.println("fps: " + 1 / dt + " deltaTime: " + dt);
+            Log.log("fps: " + 1 / dt + " deltaTime: " + dt);
             if ((++steps % 10) < 5) {
                 MaterialDef.Full.use(gl);
             } else {
@@ -227,7 +231,7 @@ public class GLRenderer implements GLEventListener {
 
         }
 
-        r += (dt*5);
+        r += (dt * 5);
         //int i0 = ((int)r / 100) % 10;
         for (int i = 0; i < MODEL_NUM; i++) {
             so[i].setRx(r * 2);
@@ -246,5 +250,10 @@ public class GLRenderer implements GLEventListener {
 
     public void displayChanged(GLAutoDrawable drawable, boolean modeChanged,
             boolean deviceChanged) {
+    }
+
+    public void destroy(GL gl) {
+        if(shader != null)
+            shader.destroy(gl);
     }
 }
