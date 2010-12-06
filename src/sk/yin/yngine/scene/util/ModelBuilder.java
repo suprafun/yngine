@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-// TODO(magyi): Implement Absent, PerFace and PerFaceVertice ModelLayouts
+// TODO(magyi): Implement Absent, PerFace (Normals done) and PerFaceVertice ModelLayouts
 public class ModelBuilder {
     private List<Point3f> vertices = new ArrayList<Point3f>();
     public List<Integer> verticleCache = new ArrayList<Integer>();
@@ -33,6 +33,7 @@ public class ModelBuilder {
 
     public int _generateSomeVertexColor(Point3f v) {
         Point3f c = new Point3f();
+        // TODO(mgagyi): Implement these switches as Strategy pattern
         /*
         float rr = (float) (Math.random() / 3 - (1.0 / 6));
         float rg = (float) (Math.random() / 3 - (1.0 / 6));

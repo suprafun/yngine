@@ -8,6 +8,7 @@ import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
 import com.bulletphysics.collision.shapes.SphereShape;
+import com.bulletphysics.collision.shapes.StaticPlaneShape;
 import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.DynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
@@ -53,6 +54,7 @@ public class GLRenderer implements GLEventListener {
     private int steps;
     ShaderProgram shader;
     DynamicsWorld bulletWorld;
+    RigidBody groundBody;
     MotionState motionState[] = new MotionState[MODEL_NUM];
     private static final boolean DISABLE_SHADERS = false;
     private static final float SPHERE_RADIUS = 13.0f;
@@ -101,17 +103,17 @@ public class GLRenderer implements GLEventListener {
                 new DiscreteDynamicsWorld(dispatcher, broadphase, solver, config);
 
         {
-            CollisionShape shape =
-                    new BoxShape(new Vector3f(10.0f, 10.0f, 10.0f));
-            Vector3f localInertia = new Vector3f(0.0f, 0.0f, 0.0f);
-            Transform transform = new Transform();
-            transform.origin.set(new Vector3f(0.0f, 20.0f, 0.0f));
-            MotionState motionState = new MyMotionState(transform);
-            RigidBodyConstructionInfo rbInfo =
-                    new RigidBodyConstructionInfo(0, motionState, shape, localInertia);
-            RigidBody body = new RigidBody(rbInfo);
+            CollisionShape shape = new BoxShape(new Vector3f(100.0f, 10.0f, 100.0f));
 
-            bulletWorld.addRigidBody(body);
+            Transform transform = new Transform();
+            transform.origin.set(new Vector3f(0.0f, -30.0f, 0.0f));
+            transform.basis.setIdentity();
+            DefaultMotionState motionState = new DefaultMotionState(transform);
+            RigidBodyConstructionInfo rbInfo =
+                    new RigidBodyConstructionInfo(0, motionState, shape);
+            groundBody = new RigidBody(rbInfo);
+
+            bulletWorld.addRigidBody(groundBody);
         }
 
         GL gl = drawable.getGL();
@@ -249,7 +251,9 @@ public class GLRenderer implements GLEventListener {
                 bulletWorld.addRigidBody(body);
                 
                 if(i == 0)
-                    body.applyCentralImpulse(new Vector3f(100.0f, -20.0f, 0.0f));
+                    body.applyCentralImpulse(new Vector3f(300.0f, -80.0f, 50.0f));
+                else
+                    body.applyCentralImpulse(new Vector3f(-250.0f, -150.0f, -20.0f));
             }
         }
     }
