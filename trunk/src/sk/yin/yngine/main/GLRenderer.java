@@ -2,7 +2,6 @@ package sk.yin.yngine.main;
 
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
-import javax.media.opengl.DebugGL;
 import sk.yin.yngine.scene.util.SphereModelFactory;
 import sk.yin.yngine.math.Model;
 import javax.media.opengl.GL;
@@ -33,10 +32,12 @@ public class GLRenderer implements GLEventListener {
     float r;
     long t0 = 0, frames = 0;
     private SceneGraph scene;
-    private static final int glFace = GL.GL_FRONT;
+    private static final int glFace = GL.GL_FRONT_AND_BACK;
     private int steps;
     ShaderProgram shader;
     private static final boolean DISABLE_SHADERS = false;
+    private static final float SPHERE_RADIUS = 13.0f;
+    private static final float SPHERE_MASS = 10.0f;
 
     private enum MaterialDef {
         Copper(0.3f, 0.7f, 0.6f, 6.0f, 1.8f, 228, 123, 87),
@@ -45,8 +46,8 @@ public class GLRenderer implements GLEventListener {
         Glass(0.3f, 0.7f, 0.7f, 32.00f, 1.0f, 199, 227, 208),
         Plastic(0.3f, 0.9f, 0.9f, 32.0f, 1.0f, 0, 19, 252),
         Pearl(1.5f, -0.5f, 2.0f, 99.0f, 1.0f, 255, 138, 138),
-        Full(0.2f, 0.7f, 0.7f, 16.0f, 1.0f, 255, 255, 255),
-        Half(0.1f, 0.4f, 0.6f, 32.0f, 1.0f, 255, 255, 255);
+        Full(0.4f, 0.7f, 0.7f, 16.0f, 1.0f, 255, 255, 255),
+        Half(0.2f, 0.4f, 0.6f, 32.0f, 1.0f, 255, 255, 255);
         public final float ambient[], diffuse[], specular[], shininess, briliance, c[];
 
         MaterialDef(float ambient, float diffuse, float specular, float shinines,
@@ -69,7 +70,7 @@ public class GLRenderer implements GLEventListener {
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
-        drawable.setGL(new DebugGL(drawable.getGL()));
+        // drawable.setGL(new DebugGL(drawable.getGL()));
 
         GL gl = drawable.getGL();
         System.err.println("INIT GL IS: " + gl.getClass().getName());
@@ -140,22 +141,21 @@ public class GLRenderer implements GLEventListener {
             SphereModelFactory.BasePolyhedron base =
                     SphereModelFactory.BasePolyhedron.OCTAHEDRON;
             s[i] = SphereModelFactory.getInstance()
-                    .createSphere(13.0f, 5, base);
+                    .createSphere(SPHERE_RADIUS, 5, base);
 
-            // Post process FIXME
-            //if(i != 1)
-                //s[i].setTexture(texture);
+            // TODO(mgagyi): This should be done by decorators in ModelBuilder
+            s[i].setTexture(texture);
+            s[i].textureZCorrectCoord(true);
 
+            //* // Change color of models to white.
             float c[] = s[i].colors();
             for (int j = 0; j < c.length; j++) {
-
-                //c[j] = 1.0f;
+                c[j] = 0.5f + c[j] / 2;
             }
+            //*/
             if (i == 1) {
                 s[i].setShader(shader);
-                s[i].textureZCorrectCoord(false);
             } else {
-                s[i].textureZCorrectCoord(true);
             }
         }
         r = 0;

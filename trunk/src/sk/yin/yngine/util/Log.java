@@ -50,7 +50,7 @@ public class Log {
      */
     public void msg(String message) {
         String time = getTime();
-        System.out.println(System.currentTimeMillis() + " " + message);
+        System.out.println(time + ": " + message);
     }
 
     /**
@@ -65,6 +65,6 @@ public class Log {
 
     protected String getTime() {
         long time = System.currentTimeMillis();
-        return DateFormatUtils.format(time, "%h:%m%s.%S");
+        return DateFormatUtils.format(time, "hh:mm:ss.SSS");
     }
 }
