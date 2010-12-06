@@ -1,5 +1,21 @@
 package sk.yin.yngine.main;
 
+import com.bulletphysics.collision.broadphase.BroadphaseInterface;
+import com.bulletphysics.collision.broadphase.DbvtBroadphase;
+import com.bulletphysics.collision.dispatch.CollisionConfiguration;
+import com.bulletphysics.collision.dispatch.CollisionDispatcher;
+import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
+import com.bulletphysics.collision.shapes.BoxShape;
+import com.bulletphysics.collision.shapes.CollisionShape;
+import com.bulletphysics.collision.shapes.SphereShape;
+import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
+import com.bulletphysics.dynamics.DynamicsWorld;
+import com.bulletphysics.dynamics.RigidBody;
+import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
+import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
+import com.bulletphysics.linearmath.DefaultMotionState;
+import com.bulletphysics.linearmath.MotionState;
+import com.bulletphysics.linearmath.Transform;
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
 import sk.yin.yngine.scene.util.SphereModelFactory;
@@ -8,6 +24,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
+import javax.vecmath.Vector3f;
 import sk.yin.yngine.math.Point3f;
 import sk.yin.yngine.resources.ResourceGetter;
 import sk.yin.yngine.particlesystem.ParticleUnit;
@@ -35,6 +52,8 @@ public class GLRenderer implements GLEventListener {
     private static final int glFace = GL.GL_FRONT_AND_BACK;
     private int steps;
     ShaderProgram shader;
+    DynamicsWorld bulletWorld;
+    MotionState motionState[] = new MotionState[MODEL_NUM];
     private static final boolean DISABLE_SHADERS = false;
     private static final float SPHERE_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
@@ -57,7 +76,8 @@ public class GLRenderer implements GLEventListener {
             this.specular = new float[]{specular, specular, specular, 1.0f};
             this.shininess = shinines;
             this.briliance = brilliance;
-            c = new float[]{(float) r / 255, (float) g / 255, (float) b / 512, 1.0f};
+            c =
+                    new float[]{(float) r / 255, (float) g / 255, (float) b / 512, 1.0f};
         }
 
         public void use(GL gl) {
@@ -71,6 +91,28 @@ public class GLRenderer implements GLEventListener {
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
         // drawable.setGL(new DebugGL(drawable.getGL()));
+
+        CollisionConfiguration config = new DefaultCollisionConfiguration();
+        SequentialImpulseConstraintSolver solver =
+                new SequentialImpulseConstraintSolver();
+        CollisionDispatcher dispatcher = new CollisionDispatcher(config);
+        BroadphaseInterface broadphase = new DbvtBroadphase();
+        bulletWorld =
+                new DiscreteDynamicsWorld(dispatcher, broadphase, solver, config);
+
+        {
+            CollisionShape shape =
+                    new BoxShape(new Vector3f(10.0f, 10.0f, 10.0f));
+            Vector3f localInertia = new Vector3f(0.0f, 0.0f, 0.0f);
+            Transform transform = new Transform();
+            transform.origin.set(new Vector3f(0.0f, 20.0f, 0.0f));
+            MotionState motionState = new MyMotionState(transform);
+            RigidBodyConstructionInfo rbInfo =
+                    new RigidBodyConstructionInfo(0, motionState, shape, localInertia);
+            RigidBody body = new RigidBody(rbInfo);
+
+            bulletWorld.addRigidBody(body);
+        }
 
         GL gl = drawable.getGL();
         System.err.println("INIT GL IS: " + gl.getClass().getName());
@@ -104,6 +146,7 @@ public class GLRenderer implements GLEventListener {
         //
         URL url;
         String filenames[] = new String[]{
+            "tex06.2.png",
             //"tex05-c.png",
             "tex05.png",
             //"tex04.2.png",
@@ -123,25 +166,26 @@ public class GLRenderer implements GLEventListener {
         //
         // Shaders
         //
-        if(DISABLE_SHADERS)
+        if (DISABLE_SHADERS) {
             ShaderProgram.disableShaders(gl);
+        }
         shader = ShaderFactory.getInstance().createShaderProgram(gl);
 
         // TODO(mgagyi): Implement cube-map loading
         //url = ResourceGetter.getFirstResourcePresent(new String[]{"escher.cubemap.jpg"});
         /*
         try {
-            t = CubeMapTextureFactory.getInstance(gl).loadImage(url);
+        t = CubeMapTextureFactory.getInstance(gl).loadImage(url);
         } catch (IOException ex) {
-            ex.printStackTrace();
+        ex.printStackTrace();
         }
-        */
-        
+         */
+
         for (int i = 0; i < MODEL_NUM; i++) {
             SphereModelFactory.BasePolyhedron base =
                     SphereModelFactory.BasePolyhedron.OCTAHEDRON;
-            s[i] = SphereModelFactory.getInstance()
-                    .createSphere(SPHERE_RADIUS, 5, base);
+            s[i] =
+                    SphereModelFactory.getInstance().createSphere(SPHERE_RADIUS, 5, base);
 
             // TODO(mgagyi): This should be done by decorators in ModelBuilder
             s[i].setTexture(texture);
@@ -190,6 +234,23 @@ public class GLRenderer implements GLEventListener {
             obj.setRz(220.0f);
             scene.addChild(obj);
             so[i] = obj;
+
+            {
+                CollisionShape shape = new SphereShape(SPHERE_RADIUS);
+                Transform transform = new Transform();
+                transform.origin.set(new Vector3f(x, 0.0f, 0.0f));
+                motionState[i] = new DefaultMotionState(transform);
+                Vector3f localInertia = new Vector3f(0.0f, 0.0f, 0.0f);
+                shape.calculateLocalInertia(SPHERE_MASS, localInertia);
+                RigidBodyConstructionInfo rbInfo =
+                        new RigidBodyConstructionInfo(SPHERE_MASS, motionState[i], shape, localInertia);
+                RigidBody body = new RigidBody(rbInfo);
+
+                bulletWorld.addRigidBody(body);
+                
+                if(i == 0)
+                    body.applyCentralImpulse(new Vector3f(100.0f, -20.0f, 0.0f));
+            }
         }
     }
 
@@ -220,6 +281,16 @@ public class GLRenderer implements GLEventListener {
         }
 
         dt = (float) (t1 - t0) / 1000;
+
+        bulletWorld.stepSimulation(dt);
+
+        for(int i = 0; i < MODEL_NUM; i++) {
+            Transform transform = new Transform();
+            motionState[i].getWorldTransform(transform);
+            so[i].setPx(transform.origin.x);
+            so[i].setPy(transform.origin.y);
+            so[i].setPz(transform.origin.z);
+        }
 
         GL gl = drawable.getGL();
 
@@ -256,7 +327,21 @@ public class GLRenderer implements GLEventListener {
     }
 
     public void destroy(GL gl) {
-        if(shader != null)
+        if (shader != null) {
             shader.destroy(gl);
+        }
+    }
+
+    class MyMotionState extends DefaultMotionState {
+        MyMotionState(Transform transform) {
+            super(transform);
+            System.out.println(transform.toString());
+        }
+
+        public void setWorldTransform(Transform centerOfMassWorldTrans) {
+            super.setWorldTransform(centerOfMassWorldTrans);
+            System.out.println(centerOfMassWorldTrans.toString());
+        }
+
     }
 }

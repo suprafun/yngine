@@ -43,9 +43,9 @@ public class ModelBuilder {
         /*/
         float rr = (float) Math.sin(Math.PI * v.x * 2) / 4;
         rr = 0;
-        c.x = (float) Math.sin(v.x*3);
-        c.y = (float) Math.sin(v.y*3);
-        c.z = (float) Math.sin(v.z*3);
+        c.x = (float) Math.sin(v.x * 3);
+        c.y = (float) Math.sin(v.y * 3);
+        c.z = (float) Math.sin(v.z * 3);
         //*/
 
         return addColor(c);
@@ -72,11 +72,12 @@ public class ModelBuilder {
     public int addFace(Triangle t) {
         return addFace(t, false);
     }
+
     public int addFace(Triangle t, boolean mapFace) {
-        if(mapFace) {
+        if (mapFace) {
             t = mapFaceIndexes(t);
         }
-        
+
         int idx = faces.indexOf(t);
         if (idx == -1) {
             idx = faces.size();
@@ -85,8 +86,10 @@ public class ModelBuilder {
         return lastFace = idx;
     }
 
-    public int setLastFaceNormals(int... normals) {
-        throw new NotImplementedException();
+    public void setLastFaceNormals(int... normals) {
+        if(normals.length != 1)
+            throw new IllegalArgumentException("normals.length != 1");
+        faceNormals.set(lastFace, normals[0]);
     }
 
     public int setLastFaceColors(int... colors) {
@@ -107,21 +110,25 @@ public class ModelBuilder {
     }
 
     public void setRadius(float radius) {
-        for (Point3f v: vertices) {
+        for (Point3f v : vertices) {
             v.absolute(radius);
         }
     }
 
     public Model toModel() {
-        Model.ModelLayout nlay = Model.ModelLayout.VerticleBound,
-                clay = Model.ModelLayout.VerticleBound;
-        int flen = 3 + nlay.len + clay.len;
+        Model.ModelLayout normalLayout = Model.ModelLayout.VerticleBound,
+                colorLayout = Model.ModelLayout.VerticleBound;
+        return toModel(normalLayout, colorLayout);
+    }
+
+    public Model toModel(Model.ModelLayout colorLayout, Model.ModelLayout normalLayout) {
+        int flen = 3 + normalLayout.len + colorLayout.len;
 
         float[] vs = new float[vertices.size() * 3];
         float[] cs = new float[colors.size() * 3];
         float[] ns = new float[normals.size() * 3];
         int[] ts = new int[faces.size() * flen];
-        
+
         for (int i = 0; i < vertices.size(); i++) {
             Point3f v = vertices.get(i);
             vs[3 * i] = v.x;
@@ -147,14 +154,16 @@ public class ModelBuilder {
             ts[fi++] = t.v2;
             ts[fi++] = t.v3;
 
-            if(nlay == Model.ModelLayout.VerticleBound) {
+            if (normalLayout == Model.ModelLayout.VerticleBound) {
+            } else if (normalLayout == Model.ModelLayout.PerFace) {
+                ts[fi++] = faceNormals.get(i);
             } else {
                 throw new NotImplementedException();
             }
-
         }
-    
-        return new Model(vs, ns, cs, ts, Model.ModelLayout.VerticleBound,
+
+        return new Model(vs, ns, cs, ts, normalLayout,
                 Model.ModelLayout.VerticleBound);
     }
+
 }
