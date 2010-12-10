@@ -1,15 +1,13 @@
 package sk.yin.yngine.particlesystem;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import sk.yin.yngine.math.Point3f;
 
 /**
  * Minimal particle system state with gravity and air invResistance.
- * @author Matej 'Yin' Gagyi (matej.gagi@gmail.com)
+ *
+ * @author Matej 'Yin' Gagyi (yinotarus+yngine-src@gmail.com)
  */
 public class SimpleState implements IParticleSystemState {
     private Point3f[] positions;

@@ -4,7 +4,9 @@ import sk.yin.yngine.math.Model;
 import sk.yin.yngine.math.Triangle;
 import sk.yin.yngine.math.Point3f;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 // TODO(magyi): Implement Absent, PerFace (Normals done) and PerFaceVertice ModelLayouts
@@ -15,7 +17,7 @@ public class ModelBuilder {
     private List<Point3f> normals = new ArrayList<Point3f>();
     private List<Triangle> faces = new ArrayList<Triangle>();
     private List<Integer> faceColors = new ArrayList<Integer>();
-    private List<Integer> faceNormals = new ArrayList<Integer>();
+    private Map<Integer, Integer> faceNormals = new HashMap<Integer, Integer>();
     private int lastFace = -1;
 
     public ModelBuilder() {
@@ -90,7 +92,7 @@ public class ModelBuilder {
     public void setLastFaceNormals(int... normals) {
         if(normals.length != 1)
             throw new IllegalArgumentException("normals.length != 1");
-        faceNormals.set(lastFace, normals[0]);
+        faceNormals.put(lastFace, normals[0]);
     }
 
     public int setLastFaceColors(int... colors) {
@@ -163,8 +165,7 @@ public class ModelBuilder {
             }
         }
 
-        return new Model(vs, ns, cs, ts, normalLayout,
-                Model.ModelLayout.VerticleBound);
+        return new Model(vs, ns, cs, ts, normalLayout, colorLayout);
     }
 
 }

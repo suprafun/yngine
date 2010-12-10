@@ -3,6 +3,7 @@ package sk.yin.yngine.math;
 import com.sun.opengl.util.texture.Texture;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
+import sk.yin.yngine.util.Log;
 
 /**
  *
@@ -83,8 +84,8 @@ public class Model {
     public enum ModelLayout {
         Absent(0),
         VerticleBound(0),
-        PerFaceVerticle(1),
-        PerFace(3);
+        PerFace(1),
+        PerFaceVerticle(3);
         public final int len;
 
         private ModelLayout(int len) {
@@ -149,30 +150,22 @@ public class Model {
                 if (normalLayout == ModelLayout.VerticleBound
                         && vidx < normals.length) {
                     nidx = vidx;
-                } else {
-                    if (colorLayout == ModelLayout.PerFace
-                            && first) {
-                        nidx = faces[i + 3];
-                    } else {
-                        if (normalLayout == ModelLayout.PerFaceVerticle) {
-                            nidx = faces[voff + 3];
-                        }
-                    }
+                } else if (normalLayout == ModelLayout.PerFace
+                        && first) {
+                    nidx = faces[i + 3];
+                } else if (normalLayout == ModelLayout.PerFaceVerticle) {
+                    nidx = faces[voff + 3];
                 }
 
                 // Colors
                 if (colorLayout == ModelLayout.VerticleBound
                         && vidx < colors.length) {
                     cidx = vidx;
-                } else {
-                    if (colorLayout == ModelLayout.PerFace
-                            && first) {
-                        cidx = faces[i + 3 + normalLayout.len];
-                    } else {
-                        if (colorLayout == ModelLayout.PerFaceVerticle) {
-                            cidx = faces[voff + 3 + normalLayout.len];
-                        }
-                    }
+                } else if (colorLayout == ModelLayout.PerFace
+                        && first) {
+                    cidx = faces[i + 3 + normalLayout.len];
+                } else if (colorLayout == ModelLayout.PerFaceVerticle) {
+                    cidx = faces[voff + 3 + normalLayout.len];
                 }
 
                 if (normalLayout != ModelLayout.Absent) {
@@ -193,7 +186,6 @@ public class Model {
                         gl.glColor3f(colors[cidx], colors[cidx + 1], colors[cidx + 2]);
                     }
                 }
-
                 gl.glVertex3f(vertices[vidx], vertices[vidx + 1], vertices[vidx + 2]);
             }
         }

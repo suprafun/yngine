@@ -18,29 +18,30 @@ public class GenericSceneNode implements ISceneNode {
     private ITransformAttribute transform;
     private ISceneAttribute attributes[];
 
-    public GenericSceneNode(ISceneAttribute properties[]) {
+    public GenericSceneNode(ISceneAttribute... attributes) {
+        this.attributes = attributes;
         geometry = this.<IGeometryAttribute>find(IGeometryAttribute.class);
         transform = this.<ITransformAttribute>find(ITransformAttribute.class);
     }
 
     public void render(GL gl) {
-        for(RenderStage stage : RenderStage.values())
+        for(RenderStage stage : RenderStage.values()) {
             // NOTE(mgagyi): Check if this is only modern JavaScript sickness ;)
-            for(ISceneAttribute attr : attributes)
+            for (ISceneAttribute attr : attributes) {
                 attr.render(gl, stage);
-        // TODO(mgagyi): Remove this old reference code:
-        /*
-        if(transform != null)
-            transform.transform(gl);
-        geometry.render(gl);
-        if(transform != null)
-            transform.transformEnd(gl);
-        */
+            }
+            if (stage == RenderStage.RENDER) {
+                for(ISceneNode child : children)
+                    child.render(gl);
+            }
+        }
     }
 
     public void update(float deltaTime) {
         for(ISceneAttribute attr : attributes)
             attr.update(deltaTime);
+        for(ISceneNode child : children)
+            child.update(deltaTime);
     }
 
     // TODO(mgagyi): What to do with them? Call listeners?

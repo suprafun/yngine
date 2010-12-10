@@ -44,12 +44,12 @@ public class ShaderFactory {
 
         url = ResourceGetter.getResource(DEFAULT_VERTEX_SHADER);
         source = fileutil.read(url);
-        Log.log("Shader source:\n" + source);
+        Log.log("Shader source: " + url.toString());
         shaderBuilder.addShaderSource(ShaderType.VERTEX, source);
 
         url = ResourceGetter.getResource(DEFAULT_FRAGMENT_SHADER);
         source = fileutil.read(url);
-        Log.log("Shader source:\n" + source);
+        Log.log("Shader source: " + url.toString());
         shaderBuilder.addShaderSource(ShaderType.FRAGMENT, source);
 
         Log.log("Default shader program loaded, running build...");
