@@ -8,7 +8,7 @@ import sk.yin.yngine.particlesystem.ParticleUnit;
  * 
  * @author Matej 'Yin' Gagyi (matej.gagi@gmail.com)
  */
-public class ParticleUnitSceneNode implements ISceneNode {
+public class ParticleUnitSceneNode implements ISceneAttribute {
     private ParticleUnit unit;
 
     public ParticleUnitSceneNode(ParticleUnit unit) {
