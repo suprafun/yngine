@@ -37,7 +37,7 @@ import sk.yin.yngine.scene.util.TextureLoader;
 import sk.yin.yngine.scene.ParticleUnitSceneNode;
 import sk.yin.yngine.scene.SceneCamera;
 import sk.yin.yngine.scene.SceneGraph;
-import sk.yin.yngine.scene.SceneObject;
+import sk.yin.yngine.scene.GenericSceneNode;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -46,7 +46,7 @@ import sk.yin.yngine.util.Log;
 public class GLRenderer implements GLEventListener {
     private static final int MODEL_NUM = 2;
     Model s[] = new Model[MODEL_NUM];
-    SceneObject so[] = new SceneObject[MODEL_NUM];
+    GenericSceneNode so[] = new GenericSceneNode[MODEL_NUM];
     float r;
     long t0 = 0, frames = 0;
     private SceneGraph scene;
@@ -229,7 +229,7 @@ public class GLRenderer implements GLEventListener {
         float x = -15.0f * (MODEL_NUM - 1),
                 xi = 30.0f;
         for (int i = 0; i < MODEL_NUM; i++, x += xi) {
-            SceneObject obj = new SceneObject(s[i]);
+            GenericSceneNode obj = new GenericSceneNode(s[i]);
             obj.setPx(x);
             obj.setRx(150.0f);
             obj.setRy(120.0f);

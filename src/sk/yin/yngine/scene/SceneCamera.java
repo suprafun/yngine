@@ -11,7 +11,7 @@ import javax.media.opengl.GL;
  *
  * @author yin
  */
-public class SceneCamera implements ISceneTransformation {
+public class SceneCamera implements ITransformAttribute {
     private float px, py, pz, rx, ry, rz, r;
     
     public void transform(GL gl) {
