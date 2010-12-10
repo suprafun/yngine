@@ -5,6 +5,7 @@ import javax.media.opengl.GL;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Vector3f;
 import sk.yin.yngine.scene.ISceneAttribute.RenderStage;
+import sk.yin.yngine.util.Log;
 
 /**
  * Static scene transformation. Can be changed anytime from outside, but won't
@@ -14,6 +15,17 @@ import sk.yin.yngine.scene.ISceneAttribute.RenderStage;
  */
 public class TransformAttribute implements ITransformAttribute {
     Transform transform;
+
+    public TransformAttribute() {
+        transform = new Transform();
+        transform.setIdentity();
+    }
+
+    public TransformAttribute(Vector3f origin) {
+        transform = new Transform();
+        transform.basis.setIdentity();
+        transform.origin.set(origin);
+    }
 
     @Override
     public void update(float deltaTime) {
@@ -42,9 +54,9 @@ public class TransformAttribute implements ITransformAttribute {
             }
             if (basis != null) {
                 gl.glMultMatrixf(new float[]{
-                            basis.m00, basis.m01, basis.m02, 0f,
-                            basis.m10, basis.m11, basis.m12, 0f,
-                            basis.m20, basis.m21, basis.m22, 0f,
+                            basis.m00, basis.m10, basis.m20, 0f,
+                            basis.m01, basis.m11, basis.m21, 0f,
+                            basis.m02, basis.m12, basis.m22, 0f,
                             0f, 0f, 0f, 1f
                         }, 0);
             }

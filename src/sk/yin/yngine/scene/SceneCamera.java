@@ -1,24 +1,27 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package sk.yin.yngine.scene;
 
 import javax.media.opengl.GL;
 
 /**
- *
- * @author yin
+ * Simple SceneCamera implementation.
+ * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
-public class SceneCamera implements ITransformAttribute {
-    private float px, py, pz, rx, ry, rz, r;
+public class SceneCamera implements ISceneAttribute {
+    private float px, py, pz, rx, ry, rz;
+
+    public void update(float deltaTime) {
+        // Do nothing.
+    }
+
+    public void render(GL gl, RenderStage stage) {
+        // TODO(yin): What about adding a SETUP and SHUTDOWN rendering stages?
+    }
     
     public void transform(GL gl) {
         gl.glPushMatrix();
         gl.glLoadIdentity();
         gl.glTranslatef(-px, -py, -pz);
-        gl.glRotatef(rx, ry, rz, -r);
+        gl.glRotatef(rx, ry, rz, -1f);
     }
 
     public void transformEnd(GL gl) {
@@ -48,14 +51,6 @@ public class SceneCamera implements ITransformAttribute {
 
     public void setPz(float pz) {
         this.pz = pz;
-    }
-
-    public float getR() {
-        return r;
-    }
-
-    public void setR(float r) {
-        this.r = r;
     }
 
     public float getRx() {

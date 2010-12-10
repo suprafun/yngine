@@ -60,7 +60,7 @@ public class Log {
      */
     public void msg(String message, Exception exception) {
         String time = getTime();
-        System.out.println(time + ": " + message + ": " + exception.getClass().getName() + ": " + exception.getMessage());
+        System.err.println(time + ": " + message + ": " + exception.getClass().getName() + ": " + exception.getMessage());
     }
 
     protected String getTime() {

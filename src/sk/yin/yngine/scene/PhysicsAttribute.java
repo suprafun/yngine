@@ -13,9 +13,9 @@ import javax.vecmath.Vector3f;
  * 
  * @author Matej 'Yin' Gagyi (matej.gagyi@gmail.com)
  */
-public class PhysicsAttribute extends DefaultMotionState implements ITransformAttribute {
-    private ITransformAttribute transform;
-
+// TODO(yin): This attribute should be created together with JBullet objects.
+public class PhysicsAttribute extends DefaultMotionState
+        implements ITransformAttribute {
     /**
      * Creates a new DefaultMotionState with all transforms set to identity.
      */
@@ -39,6 +39,12 @@ public class PhysicsAttribute extends DefaultMotionState implements ITransformAt
         super(startTrans, centerOfMassOffset);
     }
 
+    public PhysicsAttribute(Vector3f origin) {
+        super();
+        startWorldTrans.origin.set(origin);
+        graphicsWorldTrans.origin.set(origin);
+    }
+
     @Override
     public void update(float deltaTime) {
     }
@@ -56,9 +62,9 @@ public class PhysicsAttribute extends DefaultMotionState implements ITransformAt
     }
 
     public void transform(GL gl) {
-        if (transform != null) {
-            Vector3f origin = transform.origin();
-            Matrix3f basis = transform.basis();
+        if (graphicsWorldTrans != null) {
+            Vector3f origin = graphicsWorldTrans.origin;
+            Matrix3f basis = graphicsWorldTrans.basis;
             gl.glPushMatrix();
 
             if (origin != null) {
@@ -66,9 +72,9 @@ public class PhysicsAttribute extends DefaultMotionState implements ITransformAt
             }
             if (basis != null) {
                 gl.glMultMatrixf(new float[]{
-                            basis.m00, basis.m01, basis.m02, 0f,
-                            basis.m10, basis.m11, basis.m12, 0f,
-                            basis.m20, basis.m21, basis.m22, 0f,
+                            basis.m00, basis.m10, basis.m20, 0f,
+                            basis.m01, basis.m11, basis.m21, 0f,
+                            basis.m02, basis.m12, basis.m22, 0f,
                             0f, 0f, 0f, 1f
                         }, 0);
             }
