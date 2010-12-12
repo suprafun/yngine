@@ -2,7 +2,7 @@ package sk.yin.yngine.scene.util;
 
 import sk.yin.yngine.math.Model;
 import sk.yin.yngine.math.Point3f;
-import sk.yin.yngine.math.Triangle;
+import sk.yin.yngine.math.Triple;
 
 /**
  * Creates models of boxes with different sizes.
@@ -62,15 +62,20 @@ public class BoxModelGenerator {
             Point3f vertex = new Point3f(cubeVertices[i], cubeVertices[i+1], cubeVertices[i+2]);
             vertex.multiply(scale);
             mb.addVertex(vertex);
-            mb.addColor(new Point3f((float)Math.random(), (float)Math.random(), (float)Math.random()));
+            mb.addColor(new Point3f(
+                    (float) cubeVertices[i]/2+.5f,
+                    (float) cubeVertices[i+1]/2+.5f,
+                    (float) cubeVertices[i+2]/2+.5f
+            ));
         }
         for(int i = 0, l = cubeFaces.length; i < l; i += 3) {
-            Triangle triangle = new Triangle(cubeFaces[i], cubeFaces[i+1], cubeFaces[i+2]);
+            Triple triangle = new Triple(cubeFaces[i], cubeFaces[i+1], cubeFaces[i+2]);
             Point3f normal = new Point3f(cubeNormals[i], cubeNormals[i+1], cubeNormals[i+2]);
             mb.addFace(triangle);
-            int normalIdx = mb.addNormal(normal);
-            mb.setLastFaceNormals(new int[]{normalIdx});
+            int idx = mb.addNormal(normal);
+            mb.appendNormalIndexes(new Triple(idx));
+            mb.appendVerticesColor(0);
         }
-        return mb.toModel(Model.ModelLayout.VerticleBound, Model.ModelLayout.PerFace);
+        return mb.toModel();
     }
 }

@@ -198,7 +198,7 @@ public class GLRenderer implements GLEventListener {
                     i == 0 ? SphereModelGenerator.BasePolyhedron.OCTAHEDRON
                     : SphereModelGenerator.BasePolyhedron.CUBE;
             s[i] =
-                    SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 5, base);
+                    SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 1, base);
             //s[i] = BoxModelGenerator.instance().createBox(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
 
             // TODO(mgagyi): This should be done by decorators in ModelBuilder

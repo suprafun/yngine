@@ -1,7 +1,7 @@
 package sk.yin.yngine.scene.util;
 
 import sk.yin.yngine.math.Model;
-import sk.yin.yngine.math.Triangle;
+import sk.yin.yngine.math.Triple;
 import sk.yin.yngine.math.Point3f;
 import java.util.ArrayList;
 
@@ -103,15 +103,16 @@ public class SphereModelGenerator {
         }
 
         ModelBuilder mb = new ModelBuilder();
-        List<Triangle> triangles = createFaceTriangles(iter);
+        List<Triple> triangles = createFaceTriangles(iter);
         for (int i = 0; i < faces.length; i += 3) {
             interpolateTriangle(mb, verts, faces[i],
                     faces[i + 1], faces[i + 2], iter);
-            for (Triangle t : triangles) {
+            for (Triple t : triangles) {
                 mb.addFace(t, true);
+                mb.appendVerticesColor(0);
             }
         }
-        mb.setRadius(r);
+        mb.moveVerticesToRadius(r);
 
         return mb.toModel();
     }
@@ -145,26 +146,51 @@ public class SphereModelGenerator {
 
                 mb.addNormal(pVertex.copy().normalize());
                 // Add color
-                mb._generateSomeVertexColor(pVertex);
+                _generateSomeVertexColor(mb, pVertex);
             }
         }
     }
 
-    protected List<Triangle> createFaceTriangles(int iter) {
+    protected List<Triple> createFaceTriangles(int iter) {
         // Number of iterated vertices: (iter+1) * (iter+2) / 2;
         int i1 = 0, i2, i3;
-        Triangle t;
-        List<Triangle> triangles = new ArrayList<Triangle>();
+        Triple t;
+        List<Triple> triangles = new ArrayList<Triple>();
         for (int stepV = 0; stepV < iter + 1; stepV++) {
             for (int stepH = 0; stepH < stepV + 1; stepH++, i1++) {
                 i2 = i1 + stepV + 1;
                 i3 = i1 + stepV + 2;
                 if (stepH > 0) {
-                    triangles.add(new Triangle(i1 - 1, i2, i1));
+                    triangles.add(new Triple(i1 - 1, i2, i1));
                 }
-                triangles.add(new Triangle(i1, i2, i3));
+                triangles.add(new Triple(i1, i2, i3));
             }
         }
         return triangles;
     }
+
+
+    public int _generateSomeVertexColor(ModelBuilder mb, Point3f v) {
+        Point3f c = new Point3f();
+        // TODO(mgagyi): Implement these switches as Strategy pattern
+        /*
+        float rr = (float) (Math.random() / 3 - (1.0 / 6));
+        float rg = (float) (Math.random() / 3 - (1.0 / 6));
+        float rb = (float) (Math.random() / 3 - (1.0 / 6));
+        c.x = (float) Math.random();
+        c.y = (float) Math.random();
+        c.z = (float) Math.random();
+        /*/
+        float rr = (float) Math.sin(Math.PI * v.x * 2) / 4;
+        rr = 0;
+        c.x = (float) Math.sin(v.x * 3);
+        c.y = (float) Math.sin(v.y * 3);
+        c.z = (float) Math.sin(v.z * 3);
+        //*/
+
+        int idx = mb.addColor(c);
+        
+        return idx;
+    }
+
 }
