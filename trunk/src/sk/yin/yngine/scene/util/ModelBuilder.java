@@ -1,24 +1,23 @@
 package sk.yin.yngine.scene.util;
 
 import sk.yin.yngine.math.Model;
-import sk.yin.yngine.math.Triangle;
+import sk.yin.yngine.math.Triple;
 import sk.yin.yngine.math.Point3f;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import javax.vecmath.TexCoord2f;
 
-// TODO(magyi): Implement Absent, PerFace (Normals done) and PerFaceVertice ModelLayouts
 public class ModelBuilder {
     private List<Point3f> vertices = new ArrayList<Point3f>();
+    // TODO(mgagyi): This needs to be moved to the generators needing it.
     public List<Integer> verticleCache = new ArrayList<Integer>();
     private List<Point3f> colors = new ArrayList<Point3f>();
     private List<Point3f> normals = new ArrayList<Point3f>();
-    private List<Triangle> faces = new ArrayList<Triangle>();
-    private List<Integer> faceColors = new ArrayList<Integer>();
-    private Map<Integer, Integer> faceNormals = new HashMap<Integer, Integer>();
-    private int lastFace = -1;
+    private List<TexCoord2f> texCoords = new ArrayList<TexCoord2f>();
+    private List<Triple> faceTriangles = new ArrayList<Triple>();
+    private List<Triple> faceColors = new ArrayList<Triple>();
+    private List<Triple> faceNormals = new ArrayList<Triple>();
+    private List<Triple> faceTexCoords = new ArrayList<Triple>();
 
     public ModelBuilder() {
     }
@@ -31,27 +30,6 @@ public class ModelBuilder {
         }
         verticleCache.add(idx);
         return idx;
-    }
-
-    public int _generateSomeVertexColor(Point3f v) {
-        Point3f c = new Point3f();
-        // TODO(mgagyi): Implement these switches as Strategy pattern
-        /*
-        float rr = (float) (Math.random() / 3 - (1.0 / 6));
-        float rg = (float) (Math.random() / 3 - (1.0 / 6));
-        float rb = (float) (Math.random() / 3 - (1.0 / 6));
-        c.x = (float) Math.random();
-        c.y = (float) Math.random();
-        c.z = (float) Math.random();
-        /*/
-        float rr = (float) Math.sin(Math.PI * v.x * 2) / 4;
-        rr = 0;
-        c.x = (float) Math.sin(v.x * 3);
-        c.y = (float) Math.sin(v.y * 3);
-        c.z = (float) Math.sin(v.z * 3);
-        //*/
-
-        return addColor(c);
     }
 
     public int addColor(Point3f c) {
@@ -72,31 +50,56 @@ public class ModelBuilder {
         return idx;
     }
 
-    public int addFace(Triangle t) {
+    public int addTexCoord(TexCoord2f texCoord) {
+        int idx = texCoords.indexOf(texCoord);
+        if (idx == -1) {
+            texCoords.add(texCoord);
+            idx = texCoords.size() - 1;
+        }
+        return idx;
+    }
+
+    public int addFace(Triple t) {
         return addFace(t, false);
     }
 
-    public int addFace(Triangle t, boolean mapFace) {
+    public int addFace(Triple t, boolean mapFace) {
         if (mapFace) {
             t = mapFaceIndexes(t);
         }
 
-        int idx = faces.indexOf(t);
+        int idx = faceTriangles.indexOf(t);
         if (idx == -1) {
-            idx = faces.size();
-            faces.add(t);
+            idx = faceTriangles.size();
+            faceTriangles.add(t);
         }
-        return lastFace = idx;
+        return idx;
     }
 
-    public void setLastFaceNormals(int... normals) {
-        if(normals.length != 1)
-            throw new IllegalArgumentException("normals.length != 1");
-        faceNormals.put(lastFace, normals[0]);
+    public void appendNormalIndexes(Triple normals) {
+        faceNormals.add(normals);
     }
 
-    public int setLastFaceColors(int... colors) {
-        throw new NotImplementedException();
+    public void appendColorIndexes(Triple colors) {
+        faceColors.add(colors);
+    }
+
+    public void appendTexCoordIndexes(Triple texCoords) {
+        faceTexCoords.add(texCoords);
+    }
+
+    public void addAndAppendColor(float r, float g, float b) {
+        appendColorIndexes(new Triple(addColor(new Point3f(r, g, b))));
+    }
+
+    public void appendVerticesColor(int offset) {
+        Triple f = faceTriangles.get(faceTriangles.size()-1),
+            c = new Triple(
+                f.idx1+offset,
+                f.idx2+offset,
+                f.idx3+offset
+            );
+        appendColorIndexes(c);
     }
 
     /**
@@ -104,33 +107,41 @@ public class ModelBuilder {
      * @param t
      * @return
      */
-    protected Triangle mapFaceIndexes(Triangle t) {
-        return new Triangle(verticleCache.get(t.v1), verticleCache.get(t.v2), verticleCache.get(t.v3));
+    protected Triple mapFaceIndexes(Triple t) {
+        return new Triple(verticleCache.get(t.idx1), verticleCache.get(t.idx2), verticleCache.get(t.idx3));
     }
 
     public void clearVertexCache() {
         verticleCache.clear();
     }
 
-    public void setRadius(float radius) {
+    public void moveVerticesToRadius(float radius) {
         for (Point3f v : vertices) {
             v.absolute(radius);
         }
     }
 
     public Model toModel() {
-        Model.ModelLayout normalLayout = Model.ModelLayout.VerticleBound,
-                colorLayout = Model.ModelLayout.VerticleBound;
-        return toModel(normalLayout, colorLayout);
-    }
+        boolean hasNormals = normals.size() > 0;
+        boolean hasColors = colors.size() > 0;
+        boolean hasTexCoords = texCoords.size() > 0;
+        int flen = 3
+                + (hasNormals ? 3 : 0)
+                + (hasColors ? 3 : 0)
+                + (hasTexCoords ? 3 : 0);
 
-    public Model toModel(Model.ModelLayout colorLayout, Model.ModelLayout normalLayout) {
-        int flen = 3 + normalLayout.len + colorLayout.len;
+        float[] vs = new float[vertices.size() * 3],
+                ns = null,
+                cs = null,
+                tcs = null;
+        int[] fs = new int[faceTriangles.size() * flen];
 
-        float[] vs = new float[vertices.size() * 3];
-        float[] cs = new float[colors.size() * 3];
-        float[] ns = new float[normals.size() * 3];
-        int[] ts = new int[faces.size() * flen];
+        if(hasNormals)
+            ns = new float[normals.size() * 3];
+        if(hasColors)
+            cs = new float[colors.size() * 3];
+        if(hasTexCoords)
+            tcs = new float[texCoords.size() * 2];
 
         for (int i = 0; i < vertices.size(); i++) {
             Point3f v = vertices.get(i);
@@ -150,22 +161,50 @@ public class ModelBuilder {
             ns[3 * i + 1] = n.y;
             ns[3 * i + 2] = n.z;
         }
-        for (int i = 0; i < faces.size(); i++) {
-            Triangle t = faces.get(i);
+        for (int i = 0; i < texCoords.size(); i++) {
+            TexCoord2f tc = texCoords.get(i);
+            tcs[2 * i] = tc.x;
+            tcs[2 * i + 1] = tc.y;
+        }
+        for (int i = 0; i < faceTriangles.size(); i++) {
+            Triple t = faceTriangles.get(i);
             int fi = flen * i;
-            ts[fi++] = t.v1;
-            ts[fi++] = t.v2;
-            ts[fi++] = t.v3;
+            fs[fi++] = t.idx1*3;
+            fs[fi++] = t.idx2*3;
+            fs[fi++] = t.idx3*3;
 
-            if (normalLayout == Model.ModelLayout.VerticleBound) {
-            } else if (normalLayout == Model.ModelLayout.PerFace) {
-                ts[fi++] = faceNormals.get(i);
-            } else {
-                throw new NotImplementedException();
+            if(hasNormals) {
+                if(i < faceNormals.size()) {
+                    t = faceNormals.get(i);
+                    fs[fi++] = t.idx1*3;
+                    fs[fi++] = t.idx2*3;
+                    fs[fi++] = t.idx3*3;
+                 } else {
+                    fs[fi++] = fs[fi++] = fs[fi++] = -1;
+                 }
+            }
+            if(hasColors) {
+                if(i < faceColors.size()) {
+                    t = faceColors.get(i);
+                    fs[fi++] = t.idx1*3;
+                    fs[fi++] = t.idx2*3;
+                    fs[fi++] = t.idx3*3;
+                 } else {
+                    fs[fi++] = fs[fi++] = fs[fi++] = -1;
+                 }
+            }
+            if(hasTexCoords) {
+                if(i < faceTexCoords.size()) {
+                    t = faceTexCoords.get(i);
+                    fs[fi++] = t.idx1*2;
+                    fs[fi++] = t.idx2*2;
+                    fs[fi++] = t.idx3*2;
+                 } else {
+                    fs[fi++] = fs[fi++] = fs[fi++] = -1;
+                 }
             }
         }
 
-        return new Model(vs, ns, cs, ts, normalLayout, colorLayout);
+        return new Model(vs, ns, cs, tcs, fs);
     }
-
 }

@@ -6,42 +6,117 @@ import javax.media.opengl.GL;
 import sk.yin.yngine.util.Log;
 
 /**
- *
- * @author yin
+ * Represents a mesh model. Every face verticle has associated table indexes of
+ * normals, color, texture coordinates, etc. if they're present the table aren't
+ * null.
+ * 
+ * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
 public class Model {
-    //
-    // vertices  -> [ v1:(x y z) v2:(x y z) ... ] -> { float, float, float; ... }
-    //
-    // normals   -> [ n1:(x y z) n2:(x y z) ... ] -> { float, float, float; ... }
-    //
-    // TODO(mgagyi): RGBA support
-    // colors    -> [ c1:(r g b) c2:(r g b) ... ] -> { float, float, float; ... }
-    //
-    // faces     -> [ f1:(Ai Bi Ci) f2:(Ai Bi Ci) ... ]
-    // facesData -> [ (<Normal>+<Color>) ]
-    //
-    // <Normal> => normalLayout=VerticleBound
-    //              -> () -> { int, int, int; ... }
-    //                    -> |normals| == |vertices|
-    //          => normalLayout=PerFace
-    //              -> (n) -> { int, int, int, int; ... }
-    //          => normalLayout=PerFaceVerticle
-    //              -> (An Bn Cn) -> { int, int, int, int, int, int; ... }
-    //
-    // <Color> => colorLayout=VerticleBound
-    //              -> () -> |colors| == |vertices|
-    //            => colorLayout=PerFace
-    //              -> (c)
-    //            => colorLayout=PerFaceVerticle
-    //              -> (Ac, Bc, Cc)
     private float[] vertices;
     private float[] normals;
     private float[] colors;
+    private float[] texCoords;
     private int[] faces;
     private ShaderProgram shader;
     private Texture texture;
     private boolean zCorrectCoord;
+
+    public Model() {
+        vertices = new float[]{};
+        faces = new int[]{};
+    }
+
+    public Model(float[] vertexes, int[] triangles) {
+        this.vertices = vertexes;
+        this.faces = triangles;
+    }
+
+    public Model(float[] vertices, float[] normals, float[] colors,
+            float[] texCoords, int[] faces) {
+        this.vertices = vertices;
+        this.normals = normals;
+        this.colors = colors;
+        this.texCoords = texCoords;
+        this.faces = faces;
+    }
+
+    public void render(GL gl) {
+        boolean hasNormals = normals != null;
+        boolean hasColors = colors != null;
+        boolean hasTexCoords = texCoords != null;
+        int flen = 3
+                + (hasNormals ? 3 : 0)
+                + (hasColors ? 3 : 0)
+                + (hasTexCoords ? 3 : 0);
+
+        if (texture != null) {
+            texture.enable();
+            texture.bind();
+        } else {
+            gl.glDisable(GL.GL_TEXTURE_2D);
+        }
+
+        if (shader != null) {
+            shader.use(gl);
+        } else {
+            ShaderProgram.unuseCurrent(gl);
+        }
+
+        if (!hasNormals) {
+            gl.glNormal3f(0f, 0f, 0f);
+        }
+        if (!hasColors) {
+            gl.glColor3f(1f, 1f, 1f);
+        }
+        if (!hasTexCoords) {
+            gl.glTexCoord2f(0f, 0f);
+        }
+
+        gl.glBegin(gl.GL_TRIANGLES);
+        for (int i = 0; i < faces.length; i += flen) {
+            for (int voff = i; voff < i + 3; voff++) {
+                int idx, off = voff;
+
+                if (hasNormals) {
+                    off += 3;
+                    idx = faces[off];
+                    if (idx > -1) {
+                        gl.glNormal3fv(normals, idx);
+                    }
+                }
+                if (hasColors) {
+                    off += 3;
+                    idx = faces[off];
+                    if (idx > -1) {
+                        gl.glColor3fv(colors, idx);
+                    }
+                }
+                if (hasTexCoords) {
+                    off += 3;
+                    idx = faces[off];
+                    if (idx > -1) {
+                        gl.glTexCoord2fv(texCoords, idx);
+                    }
+                    /*
+                    if (texture != null) {
+                    float d = this.getTextureCorrection(normals[nidx + 2]),
+                    s = normals[nidx] * d,
+                    t = normals[nidx + 1] * d;
+                    gl.glTexCoord2f(s, t);
+                    }
+                     */
+                }
+                idx = faces[voff];
+                gl.glVertex3fv(vertices, idx);
+            }
+        }
+        gl.glEnd();
+
+        if (texture != null) {
+            texture.disable();
+        }
+    }
 
     public ShaderProgram getShader() {
         return shader;
@@ -78,121 +153,6 @@ public class Model {
             return 1.0f / (float) (Math.sin(Math.abs(nz)) + 1.0f);
         } else {
             return 1;
-        }
-    }
-
-    public enum ModelLayout {
-        Absent(0),
-        VerticleBound(0),
-        PerFace(1),
-        PerFaceVerticle(3);
-        public final int len;
-
-        private ModelLayout(int len) {
-            this.len = len;
-        }
-    };
-    private ModelLayout normalLayout;
-    private ModelLayout colorLayout;
-
-    public Model() {
-        vertices = normals = colors = new float[]{};
-        faces = new int[]{};
-        normalLayout = colorLayout = ModelLayout.Absent;
-    }
-
-    public Model(float[] vertexes, int[] triangles) {
-        this.vertices = vertexes;
-        this.faces = triangles;
-        normals = colors = new float[]{};
-        normalLayout = colorLayout = ModelLayout.Absent;
-    }
-
-    public Model(float[] vertices, float[] normals, float[] colors,
-            int[] faces, ModelLayout normalLayout, ModelLayout colorLayout) {
-        this.vertices = vertices;
-        this.faces = faces;
-        this.normals = normals;
-        this.colors = colors;
-        this.normalLayout = normalLayout;
-        this.colorLayout = colorLayout;
-    }
-
-    public void render(GL gl) {
-        int vidx /* Verticle index */ = 0,
-                nidx /* Normal index */ = 0,
-                cidx /* Color index */ = 0,
-                flen /* Face data lengths */ =
-                3 + normalLayout.len + colorLayout.len;
-        boolean first = false;
-
-        if (texture != null) {
-            texture.enable();
-            texture.bind();
-        } else {
-            gl.glDisable(GL.GL_TEXTURE_2D);
-        }
-
-        if (shader != null) {
-            //gl.gl(0);
-            shader.use(gl);
-        } else {
-            ShaderProgram.unuseCurrent(gl);
-        }
-
-        gl.glBegin(gl.GL_TRIANGLES);
-        for (int i = 0; i < faces.length; i += flen) {
-            for (int voff = i; voff < i + 3; voff++) {
-                first = (voff == i);
-                vidx = 3 * faces[voff];
-
-                // Normals
-                if (normalLayout == ModelLayout.VerticleBound
-                        && vidx < normals.length) {
-                    nidx = vidx;
-                } else if (normalLayout == ModelLayout.PerFace
-                        && first) {
-                    nidx = faces[i + 3];
-                } else if (normalLayout == ModelLayout.PerFaceVerticle) {
-                    nidx = faces[voff + 3];
-                }
-
-                // Colors
-                if (colorLayout == ModelLayout.VerticleBound
-                        && vidx < colors.length) {
-                    cidx = vidx;
-                } else if (colorLayout == ModelLayout.PerFace
-                        && first) {
-                    cidx = faces[i + 3 + normalLayout.len];
-                } else if (colorLayout == ModelLayout.PerFaceVerticle) {
-                    cidx = faces[voff + 3 + normalLayout.len];
-                }
-
-                if (normalLayout != ModelLayout.Absent) {
-                    if (first || normalLayout != ModelLayout.PerFace) {
-                        gl.glNormal3f(normals[nidx], normals[nidx + 1], normals[nidx + 2]);
-
-                        if (texture != null) {
-                            float d = this.getTextureCorrection(normals[nidx + 2]),
-                                    s = normals[nidx] * d,
-                                    t = normals[nidx + 1] * d;
-                            gl.glTexCoord2f(s, t);
-                        }
-                    }
-                }
-
-                if (colorLayout != ModelLayout.Absent) {
-                    if (first || colorLayout != ModelLayout.PerFace) {
-                        gl.glColor3f(colors[cidx], colors[cidx + 1], colors[cidx + 2]);
-                    }
-                }
-                gl.glVertex3f(vertices[vidx], vertices[vidx + 1], vertices[vidx + 2]);
-            }
-        }
-        gl.glEnd();
-
-        if (texture != null) {
-            texture.disable();
         }
     }
 }
