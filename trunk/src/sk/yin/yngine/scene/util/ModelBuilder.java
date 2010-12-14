@@ -22,12 +22,28 @@ public class ModelBuilder {
 
     public static interface Decorator {
         public void setModelBuilder(ModelBuilder builder);
+
         public void onNewVertex(int idx, Point3f vertex);
+
         public void onKnownVertex(int idx, Point3f vertex);
+
         public void onNewNormal(int idx, Point3f normal);
+
         public void onKnownNormal(int idx, Point3f normal);
+
+        public void onNewTexCoord(int idx, TexCoord2f texCoord);
+
+        public void onKnownTexCoord(int idx, TexCoord2f texCoord);
+
         public void onNewFace(int idx, Triple face);
+
         public void onKnownFace(int idx, Triple face);
+
+        /**
+         * Invoked when normals are appended to a face.
+         * @param normals
+         */
+        public void onNormalTriple(Triple normals);
     }
 
     public ModelBuilder() {
@@ -59,11 +75,18 @@ public class ModelBuilder {
         return idx;
     }
 
-    public int addNormal(Point3f n) {
-        int idx = normals.indexOf(n);
+    public int addNormal(Point3f normal) {
+        int idx = normals.indexOf(normal);
         if (idx == -1) {
-            normals.add(n.copy());
+            normals.add(normal.copy());
             idx = normals.size() - 1;
+            for (Decorator decorator : decorators) {
+                decorator.onNewNormal(idx, normal);
+            }
+        } else {
+            for (Decorator decorator : decorators) {
+                decorator.onKnownNormal(idx, normal);
+            }
         }
         return idx;
     }
@@ -73,6 +96,13 @@ public class ModelBuilder {
         if (idx == -1) {
             texCoords.add(texCoord);
             idx = texCoords.size() - 1;
+            for (Decorator decorator : decorators) {
+                decorator.onNewTexCoord(idx, texCoord);
+            }
+        } else {
+            for (Decorator decorator : decorators) {
+                decorator.onKnownTexCoord(idx, texCoord);
+            }
         }
         return idx;
     }
@@ -103,6 +133,9 @@ public class ModelBuilder {
 
     public void appendNormalIndexes(Triple normals) {
         faceNormals.add(normals);
+        for(Decorator decorator : decorators) {
+            decorator.onNormalTriple(normals);
+        }
     }
 
     public void appendColorIndexes(Triple colors) {

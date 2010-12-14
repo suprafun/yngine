@@ -43,6 +43,7 @@ import sk.yin.yngine.scene.SmoothingCameraProxy;
 import sk.yin.yngine.scene.TransformAttribute;
 import sk.yin.yngine.scene.util.BoxModelGenerator;
 import sk.yin.yngine.scene.util.ModelBuilder;
+import sk.yin.yngine.scene.util.NormalTextureFrontDecorator;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -109,22 +110,6 @@ public class GLRenderer implements GLEventListener {
         bulletWorld =
                 new DiscreteDynamicsWorld(dispatcher, broadphase, solver, config);
 
-        {
-            CollisionShape shape =
-                    new BoxShape(new Vector3f(100.0f, 10.0f, 100.0f));
-
-            Transform transform = new Transform();
-            transform.origin.set(new Vector3f(0.0f, -30.0f, 0.0f));
-            transform.basis.setIdentity();
-            DefaultMotionState motion = new DefaultMotionState(transform);
-            RigidBodyConstructionInfo rbInfo =
-                    new RigidBodyConstructionInfo(0, motion, shape);
-            rbInfo.restitution = 0.8f;
-
-            groundBody = new RigidBody(rbInfo);
-            bulletWorld.addRigidBody(groundBody);
-        }
-
         GL gl = drawable.getGL();
         System.err.println("INIT GL IS: " + gl.getClass().getName());
 
@@ -152,8 +137,9 @@ public class GLRenderer implements GLEventListener {
         gl.glColorMaterial(glFace, GL.GL_DIFFUSE);
         gl.glEnable(gl.GL_COLOR_MATERIAL);
 
-        if(DISABLE_LIGHTING)
+        if (DISABLE_LIGHTING) {
             gl.glDisable(GL.GL_LIGHTING);
+        }
 
         //
         // Models
@@ -185,22 +171,33 @@ public class GLRenderer implements GLEventListener {
         }
         shader = ShaderFactory.getInstance().createShaderProgram(gl);
 
-        // TODO(mgagyi): Implement cube-map loading
-        //url = ResourceGetter.getFirstResourcePresent(new String[]{"escher.cubemap.jpg"});
-        /*
-        try {
-        t = CubeMapTextureFactory.instance(gl).loadImage(url);
-        } catch (IOException ex) {
-        ex.printStackTrace();
-        }
-         */
+        //
+        // Ground
+        //
+        {
+            CollisionShape shape =
+                    new BoxShape(new Vector3f(100.0f, 10.0f, 100.0f));
 
+            Transform transform = new Transform();
+            transform.origin.set(new Vector3f(0.0f, -30.0f, 0.0f));
+            transform.basis.setIdentity();
+            DefaultMotionState motion = new DefaultMotionState(transform);
+            RigidBodyConstructionInfo rbInfo =
+                    new RigidBodyConstructionInfo(0, motion, shape);
+            rbInfo.restitution = 0.8f;
+
+            groundBody = new RigidBody(rbInfo);
+            bulletWorld.addRigidBody(groundBody);
+        }
+
+        // Spheres
         for (int i = 0; i < MODEL_NUM; i++) {
             SphereModelGenerator.BasePolyhedron base =
                     SphereModelGenerator.BasePolyhedron.OCTAHEDRON;
             ModelBuilder builder = new ModelBuilder();
-            s[i] = SphereModelGenerator.instance()
-                    .createSphere(SPHERE_RADIUS, 5, builder, base);
+            builder.addDecorator(new NormalTextureFrontDecorator());
+            s[i] =
+                    SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 5, builder, base);
             //s[i] = BoxModelGenerator.instance().createBox(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
 
             // TODO(mgagyi): This should be done by decorators in ModelBuilder
@@ -231,7 +228,7 @@ public class GLRenderer implements GLEventListener {
         //
         scene = new SceneGraph();
         camera = new LookAtCamera();
-        camera.setPosition(new Vector3f(0, 50f, 200f));
+        camera.setPosition(new Vector3f(0, 50f, 1000f));
         camera = new SmoothingCameraProxy(camera);
         camera.setPosition(new Vector3f(0, 10f, 80f));
         scene.addChild(new GenericSceneNode(camera));
@@ -240,6 +237,7 @@ public class GLRenderer implements GLEventListener {
 
         // Ground
         Model box = BoxModelGenerator.instance().createBox(100f, 10f, 100f);
+        box.setShader(shader);
         GenericSceneNode node = new GenericSceneNode(
                 new GeometryAttribute(box),
                 new TransformAttribute(new Vector3f(0f, -30f, 0f)));
@@ -308,10 +306,14 @@ public class GLRenderer implements GLEventListener {
         }
 
         dt = (float) (t1 - t0) / 1000;
+        // Limit the framerate to minimum of 5 fps.
+        if (dt > .2) {
+            dt = 0.2f;
+        }
 
         bulletWorld.stepSimulation(dt);
 
-        GenericSceneNode target = so[(int)(t1/8000%2)];
+        GenericSceneNode target = so[(int) (t1 / 8000 % 2)];
         camera.setTarget(target.attribute(PhysicsAttribute.class).origin());
 
         GL gl = drawable.getGL();

@@ -1,9 +1,12 @@
 package sk.yin.yngine.scene.util;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.vecmath.TexCoord2f;
 import sk.yin.yngine.math.Point3f;
 import sk.yin.yngine.math.Triple;
 import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
+import sk.yin.yngine.util.Log;
 
 /**
  * Generates texture coordinates by using vertex normals.
@@ -12,6 +15,8 @@ import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
  */
 public class NormalTextureFrontDecorator implements Decorator {
     private ModelBuilder builder;
+    private Map<Integer, Integer> normalTexCoordMap =
+            new HashMap<Integer, Integer>();
 
     public void setModelBuilder(ModelBuilder builder) {
         this.builder = builder;
@@ -24,26 +29,38 @@ public class NormalTextureFrontDecorator implements Decorator {
     }
 
     public void onNewNormal(int idx, Point3f normal) {
-        if(builder != null) {
+        if (builder != null) {
             Point3f nn = normal.copy().normalize();
             float d = getTextureCorrection(nn.z);
             TexCoord2f texCoord = new TexCoord2f(nn.x * d, nn.y * d);
-            builder.addTexCoord(texCoord);
+            int i = builder.addTexCoord(texCoord);
+            normalTexCoordMap.put(idx, i);
         }
     }
 
     public void onKnownNormal(int idx, Point3f normal) {
     }
 
+    public void onNewTexCoord(int idx, TexCoord2f texCoord) {
+    }
+
+    public void onKnownTexCoord(int idx, TexCoord2f texCoord) {
+    }
+
     public void onNewFace(int idx, Triple face) {
-        if (builder != null) {
-            builder.appendTexCoordIndexes(face);
-        }
     }
 
     public void onKnownFace(int idx, Triple face) {
     }
 
+    public void onNormalTriple(Triple normals) {
+        if (builder != null) {
+            Triple texCoords = new Triple(normalTexCoordMap.get(normals.idx1),
+                    normalTexCoordMap.get(normals.idx2),
+                    normalTexCoordMap.get(normals.idx3));
+            builder.appendTexCoordIndexes(texCoords);
+        }
+    }
 
     /**
      * Computes D - the texture coordinate correction coefficient.

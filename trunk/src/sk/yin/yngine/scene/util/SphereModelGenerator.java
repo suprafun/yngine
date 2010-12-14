@@ -1,11 +1,14 @@
 package sk.yin.yngine.scene.util;
 
+import javax.vecmath.TexCoord2f;
 import sk.yin.yngine.math.Model;
 import sk.yin.yngine.math.Triple;
 import sk.yin.yngine.math.Point3f;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import java.util.List;
+import java.util.Map;
 import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
 
 /**
@@ -67,13 +70,17 @@ public class SphereModelGenerator {
 
     protected static class SphereNormalDecorator implements Decorator {
         private ModelBuilder builder;
+        private Map<Integer, Integer> vertexNormalMap =
+                new HashMap<Integer, Integer>();
+
         public void setModelBuilder(ModelBuilder builder) {
             this.builder = builder;
         }
 
         public void onNewVertex(int idx, Point3f vertex) {
             if (builder != null) {
-                builder.addNormal(vertex.copy().normalize());
+                int i = builder.addNormal(vertex.copy().normalize());
+                vertexNormalMap.put(idx, i);
             }
         }
 
@@ -86,13 +93,25 @@ public class SphereModelGenerator {
         public void onKnownNormal(int idx, Point3f normal) {
         }
 
+        public void onNewTexCoord(int idx, TexCoord2f texCoord) {
+        }
+
+        public void onKnownTexCoord(int idx, TexCoord2f texCoord) {
+        }
+
         public void onNewFace(int idx, Triple face) {
             if (builder != null) {
-                builder.appendNormalIndexes(face);
+                Triple normals = new Triple(vertexNormalMap.get(face.idx1),
+                        vertexNormalMap.get(face.idx2),
+                        vertexNormalMap.get(face.idx3));
+                builder.appendNormalIndexes(normals);
             }
         }
 
         public void onKnownFace(int idx, Triple face) {
+        }
+
+        public void onNormalTriple(Triple normals) {
         }
     }
 
@@ -203,7 +222,6 @@ public class SphereModelGenerator {
         return triangles;
     }
 
-
     public int _generateSomeVertexColor(ModelBuilder mb, Point3f v) {
         Point3f c = new Point3f();
         // TODO(mgagyi): Implement these switches as Strategy pattern
@@ -223,8 +241,7 @@ public class SphereModelGenerator {
         //*/
 
         int idx = mb.addColor(c);
-        
+
         return idx;
     }
-
 }
