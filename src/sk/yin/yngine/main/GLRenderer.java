@@ -43,7 +43,8 @@ import sk.yin.yngine.scene.SmoothingCameraProxy;
 import sk.yin.yngine.scene.TransformAttribute;
 import sk.yin.yngine.scene.util.BoxModelGenerator;
 import sk.yin.yngine.scene.util.ModelBuilder;
-import sk.yin.yngine.scene.util.NormalTextureFrontDecorator;
+import sk.yin.yngine.scene.util.NormalBasedTextureDecorator;
+import sk.yin.yngine.scene.util.VertexBasedColorRGBDecorator;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -92,7 +93,7 @@ public class GLRenderer implements GLEventListener {
 
         public void use(GL gl) {
             gl.glMaterialfv(glFace, GL.GL_AMBIENT, ambient, 0);
-            gl.glMaterialfv(glFace, GL.GL_DIFFUSE, diffuse, 0); 
+            gl.glMaterialfv(glFace, GL.GL_DIFFUSE, diffuse, 0);
             gl.glMaterialfv(glFace, GL.GL_SPECULAR, specular, 0);
             gl.glMaterialfv(glFace, GL.GL_SHININESS, new float[]{shininess}, 0);
         }
@@ -146,6 +147,7 @@ public class GLRenderer implements GLEventListener {
         //
         URL url;
         String filenames[] = new String[]{
+            "tex07.png",
             "tex06.2.png",
             //"tex05-c.png",
             "tex05.png",
@@ -193,22 +195,20 @@ public class GLRenderer implements GLEventListener {
         // Spheres
         for (int i = 0; i < MODEL_NUM; i++) {
             SphereModelGenerator.BasePolyhedron base =
-                    i ==0 ? SphereModelGenerator.BasePolyhedron.OCTAHEDRON
-                    : SphereModelGenerator.BasePolyhedron.TETRAHEDRON;
+                    SphereModelGenerator.BasePolyhedron.OCTAHEDRON;
             ModelBuilder builder = new ModelBuilder();
-            builder.addDecorator(new NormalTextureFrontDecorator());
-            s[i] =
-                    SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 8, builder, base);
-            //s[i] = BoxModelGenerator.instance().createBox(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
-
-            // TODO(mgagyi): This should be done by decorators in ModelBuilder
-            s[i].setTexture(texture);
-
-            //* // Change color of models to white.
-            float c[] = s[i].colors();
-            for (int j = 0; j < c.length; j++) {
-                c[j] = 0.5f + c[j] / 2;
+            if (i%2 == 0) {
+                builder.addDecorator(new NormalBasedTextureDecorator());
+                s[i] = SphereModelGenerator.instance()
+                        .createSphere(SPHERE_RADIUS, 5, builder, base);
+                // TODO(mgagyi): This should be done by decorators in ModelBuilder
+                s[i].setTexture(texture);
+            } else {
+                builder.addDecorator(new VertexBasedColorRGBDecorator());
+                s[i] = BoxModelGenerator.instance()
+                        .createBox(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
             }
+
             s[i].setShader(shader);
         }
         r = 0;
@@ -257,7 +257,13 @@ public class GLRenderer implements GLEventListener {
             so[i] = obj;
 
             {
-                CollisionShape shape = new SphereShape(SPHERE_RADIUS);
+                CollisionShape shape;
+                if(i%2 ==0) {
+                    shape = new SphereShape(SPHERE_RADIUS);
+                } else {
+                    shape = new BoxShape(new Vector3f(
+                            SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS));
+                }
                 Transform transform = new Transform();
                 transform.origin.set(new Vector3f(x, 0.0f, 0.0f));
                 motionState[i] = physics;
@@ -275,6 +281,7 @@ public class GLRenderer implements GLEventListener {
                     body.applyCentralImpulse(new Vector3f(300.0f, -100.0f, 10.0f));
                 } else {
                     body.applyCentralImpulse(new Vector3f(-200.0f, -50.0f, -20.0f));
+                    body.applyTorqueImpulse(new Vector3f(200f, 500f, 1000f));
                 }
             }
         }
@@ -311,8 +318,8 @@ public class GLRenderer implements GLEventListener {
         if (dt > .2) {
             dt = 0.2f;
         }
-
-        bulletWorld.stepSimulation(dt);
+        
+        bulletWorld.stepSimulation(dt*2.5f, (int)(60/5*2.5f));
 
         GenericSceneNode target = so[(int) (t1 / 8000 % 2)];
         camera.setTarget(target.attribute(PhysicsAttribute.class).origin());

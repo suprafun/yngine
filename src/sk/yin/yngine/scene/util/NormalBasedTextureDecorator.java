@@ -2,32 +2,49 @@ package sk.yin.yngine.scene.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.vecmath.Matrix3f;
 import javax.vecmath.TexCoord2f;
 import sk.yin.yngine.math.Point3f;
 import sk.yin.yngine.math.Triple;
-import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
-import sk.yin.yngine.util.Log;
 
 /**
  * Generates texture coordinates by using vertex normals.
  *
  * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
-public class NormalTextureFrontDecorator implements Decorator {
-    private ModelBuilder builder;
+public class NormalBasedTextureDecorator extends BaseDecorator {
     private Map<Integer, Integer> normalTexCoordMap =
             new HashMap<Integer, Integer>();
+    // TODO(yin): Finish rotations; Point3f, Vector3f conflict;
+    private Matrix3f rotation;
 
-    public void setModelBuilder(ModelBuilder builder) {
-        this.builder = builder;
+    public NormalBasedTextureDecorator() {
+        rotation = new Matrix3f();
+        rotation.setIdentity();
     }
 
-    public void onNewVertex(int idx, Point3f vertex) {
+    public NormalBasedTextureDecorator(Matrix3f rotation) {
+        this.rotation = rotation;
     }
 
-    public void onKnownVertex(int idx, Point3f vertex) {
+    /**
+     * Computes D - the texture coordinate correction coefficient.
+     * @param normalZ Z coordinate of normal
+     * @return Displacement coefficient of texture coordinate.
+     */
+    protected float getTextureCorrection(float normalZ) {
+        return 1.0f / (float) (Math.sin(Math.abs(normalZ)) + 1.0f);
     }
 
+    public Matrix3f getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(Matrix3f rotation) {
+        this.rotation = rotation;
+    }
+
+    @Override
     public void onNewNormal(int idx, Point3f normal) {
         if (builder != null) {
             Point3f nn = normal.copy().normalize();
@@ -38,21 +55,7 @@ public class NormalTextureFrontDecorator implements Decorator {
         }
     }
 
-    public void onKnownNormal(int idx, Point3f normal) {
-    }
-
-    public void onNewTexCoord(int idx, TexCoord2f texCoord) {
-    }
-
-    public void onKnownTexCoord(int idx, TexCoord2f texCoord) {
-    }
-
-    public void onNewFace(int idx, Triple face) {
-    }
-
-    public void onKnownFace(int idx, Triple face) {
-    }
-
+    @Override
     public void onNormalTriple(Triple normals) {
         if (builder != null) {
             Triple texCoords = new Triple(normalTexCoordMap.get(normals.idx1),
@@ -60,14 +63,5 @@ public class NormalTextureFrontDecorator implements Decorator {
                     normalTexCoordMap.get(normals.idx3));
             builder.appendTexCoordIndexes(texCoords);
         }
-    }
-
-    /**
-     * Computes D - the texture coordinate correction coefficient.
-     * @param normalZ Z coordinate of normal
-     * @return Displacement coefficient of texture coordinate.
-     */
-    protected float getTextureCorrection(float normalZ) {
-        return 1.0f / (float) (Math.sin(Math.abs(normalZ)) + 1.0f);
     }
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
+import sk.yin.yngine.util.Log;
 
 /**
  * Represents a mesh model. Every face verticle has associated table indexes of
@@ -74,6 +75,9 @@ public class Model {
 
         gl.glBegin(gl.GL_TRIANGLES);
         for (int i = 0; i < faces.length; i += flen) {
+            boolean firstVertex = faces[i] == 0
+                    || faces[i + 1] == 0
+                    || faces[i + 2] == 0;
             for (int voff = i; voff < i + 3; voff++) {
                 int idx, off = voff;
 
@@ -112,10 +116,12 @@ public class Model {
     // TODO(yin): Change this and include it in the common rendering pipeline.
     public void renderNormals(GL gl) {
         boolean hasNormals = normals != null;
+        boolean hasColors = colors != null;
         int flen = getFaceLen();
 
         if (hasNormals) {
             ShaderProgram.unuseCurrent(gl);
+            gl.glDisable(GL.GL_DEPTH_TEST);
             gl.glDisable(GL.GL_LIGHTING);
             gl.glDisable(GL.GL_TEXTURE_2D);
             gl.glEnable(GL.GL_LINE_SMOOTH);
@@ -128,22 +134,29 @@ public class Model {
             for (int i = 0; i < faces.length; i += flen) {
                 for (int voff = i; voff < i + 3; voff++) {
                     // TODO(yin): Render all normals for given vertex at once.
-                    int idxv = faces[voff],         // Vertex index
-                            idxn = faces[voff+3],   // Normal index
+                    int idxv = faces[voff], // Vertex index
+                            idxn = faces[voff + 3], // Normal index
+                            idxc = hasColors ? faces[voff + 6] : -1, // Color index, if present
                             lenn = normals.length,
-                            id;                     // Vertex-Normal pair
+                            id;                                         // Vertex-Normal pair
 
-                    if (idxn > 0) {
+                    if (idxn > -1) {
                         id = idxv * lenn + idxn;
                         if (vertxnorm.contains(id)) {
+                            // these are already rendered.
                         } else {
                             gl.glColor4f(1f, 1f, 1f, 1f);
+                            if (hasColors) {
+                                    gl.glColor3f(colors[idxc],
+                                            colors[idxc + 1],
+                                            colors[idxc + 2]);
+                            }
                             gl.glVertex3fv(vertices, idxv);
-                            gl.glColor4f(1f, 1f, 1f, 0.3f);
+                            gl.glColor4f(1f, 1f, 1f, 0.2f);
                             // TODO(yin): Cache this if normals will be rendered.
-                            gl.glVertex3f(1.5f*normals[idxn] + vertices[idxv],
-                                    1.5f*normals[idxn + 1] + vertices[idxv + 1],
-                                    1.5f*normals[idxn + 2] + vertices[idxv + 2]);
+                            gl.glVertex3f(1.5f * normals[idxn] + vertices[idxv],
+                                    1.5f * normals[idxn + 1] + vertices[idxv + 1],
+                                    1.5f * normals[idxn + 2] + vertices[idxv + 2]);
                             vertxnorm.add(id);
                         }
                     }
@@ -151,6 +164,7 @@ public class Model {
             }
             gl.glEnd();
 
+            gl.glEnable(GL.GL_DEPTH_TEST);
             gl.glEnable(GL.GL_LIGHTING);
             gl.glEnable(GL.GL_DEPTH_TEST);
             gl.glDisable(GL.GL_LINE_SMOOTH);

@@ -31,6 +31,10 @@ public class ModelBuilder {
 
         public void onKnownNormal(int idx, Point3f normal);
 
+        public void onNewColor(int idx, Point3f color);
+
+        public void onKnownColor(int idx, Point3f color);
+
         public void onNewTexCoord(int idx, TexCoord2f texCoord);
 
         public void onKnownTexCoord(int idx, TexCoord2f texCoord);
