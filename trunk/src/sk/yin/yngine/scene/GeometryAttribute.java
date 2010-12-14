@@ -22,6 +22,8 @@ public class GeometryAttribute implements IGeometryAttribute {
     public void render(GL gl, RenderStage stage) {
         if(model != null && stage == RenderStage.RENDER) {
             model.render(gl);
+        } else if (model != null && stage == RenderStage.RENDER_NORMALS) {
+            model.renderNormals(gl);
         }
     }
 

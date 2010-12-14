@@ -12,10 +12,11 @@ import javax.media.opengl.GL;
 public interface ISceneAttribute {
     // TODO(yin): Change the RenderStage enumeration to something more flexible.
     enum RenderStage {
-        PRERENDER,  // Before rendering self and childs (transforms, etc.)
-        RENDER,     // Render yourself
+        PRERENDER,      // Before rendering self and childs (transforms, etc.)
+        RENDER,         // Render yourself
+        RENDER_NORMALS, // Render your normals
         // TODO(mgagyi): RENDER_TRANSLUCENT stage, but this can change
-        POSTRENDER;  // After rendering self and childs (pop matrix, etc.)
+        POSTRENDER,     // After rendering self and childs (pop matrix, etc.)
     }
     
     public void update(float deltaTime);

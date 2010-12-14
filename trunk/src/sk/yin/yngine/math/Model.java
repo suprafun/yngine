@@ -1,9 +1,10 @@
 package sk.yin.yngine.math;
 
 import com.sun.opengl.util.texture.Texture;
+import java.util.ArrayList;
+import java.util.List;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
-import sk.yin.yngine.util.Log;
 
 /**
  * Represents a mesh model. Every face verticle has associated table indexes of
@@ -46,10 +47,7 @@ public class Model {
         boolean hasNormals = normals != null;
         boolean hasColors = colors != null;
         boolean hasTexCoords = texCoords != null;
-        int flen = 3
-                + (hasNormals ? 3 : 0)
-                + (hasColors ? 3 : 0)
-                + (hasTexCoords ? 3 : 0);
+        int flen = getFaceLen();
 
         if (texture != null) {
             texture.enable();
@@ -73,7 +71,7 @@ public class Model {
         if (!hasTexCoords) {
             gl.glTexCoord2f(0f, 0f);
         }
-        //*
+
         gl.glBegin(gl.GL_TRIANGLES);
         for (int i = 0; i < faces.length; i += flen) {
             for (int voff = i; voff < i + 3; voff++) {
@@ -105,17 +103,16 @@ public class Model {
             }
         }
         gl.glEnd();
-        // */
-
-        renderNormals(gl, flen);
 
         if (texture != null) {
             texture.disable();
         }
     }
 
-    protected void renderNormals(GL gl, int flen) {
+    // TODO(yin): Change this and include it in the common rendering pipeline.
+    public void renderNormals(GL gl) {
         boolean hasNormals = normals != null;
+        int flen = getFaceLen();
 
         if (hasNormals) {
             ShaderProgram.unuseCurrent(gl);
@@ -126,25 +123,33 @@ public class Model {
             gl.glEnable(GL.GL_BLEND);
             gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
+            gl.glBegin(GL.GL_LINES);
+            List<Integer> vertxnorm = new ArrayList<Integer>();
             for (int i = 0; i < faces.length; i += flen) {
                 for (int voff = i; voff < i + 3; voff++) {
-                    int idx;
+                    // TODO(yin): Render all normals for given vertex at once.
+                    int idxv = faces[voff],         // Vertex index
+                            idxn = faces[voff+3],   // Normal index
+                            lenn = normals.length,
+                            id;                     // Vertex-Normal pair
 
-                    idx = faces[voff];
-                    gl.glPushMatrix();
-                    gl.glTranslatef(vertices[idx], vertices[idx + 1], vertices[idx + 2]);
-                    idx = faces[voff + 3];
-                    if (idx > 0) {
-                        gl.glBegin(GL.GL_LINES);
-                        gl.glColor4f(1f, 1f, 1f, 1f);
-                        gl.glVertex3f(0f, 0f, 0f);
-                        gl.glColor4f(1f, 1f, 1f, 0.3f);
-                        gl.glVertex3f(normals[idx], normals[idx + 1], normals[idx + 2]);
-                        gl.glEnd();
+                    if (idxn > 0) {
+                        id = idxv * lenn + idxn;
+                        if (vertxnorm.contains(id)) {
+                        } else {
+                            gl.glColor4f(1f, 1f, 1f, 1f);
+                            gl.glVertex3fv(vertices, idxv);
+                            gl.glColor4f(1f, 1f, 1f, 0.3f);
+                            // TODO(yin): Cache this if normals will be rendered.
+                            gl.glVertex3f(1.5f*normals[idxn] + vertices[idxv],
+                                    1.5f*normals[idxn + 1] + vertices[idxv + 1],
+                                    1.5f*normals[idxn + 2] + vertices[idxv + 2]);
+                            vertxnorm.add(id);
+                        }
                     }
-                    gl.glPopMatrix();
                 }
             }
+            gl.glEnd();
 
             gl.glEnable(GL.GL_LIGHTING);
             gl.glEnable(GL.GL_DEPTH_TEST);
@@ -171,5 +176,12 @@ public class Model {
 
     public float[] colors() {
         return colors;
+    }
+
+    private int getFaceLen() {
+        return 3
+                + (normals != null ? 3 : 0)
+                + (colors != null ? 3 : 0)
+                + (texCoords != null ? 3 : 0);
     }
 }
