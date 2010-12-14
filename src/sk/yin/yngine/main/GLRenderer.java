@@ -92,7 +92,7 @@ public class GLRenderer implements GLEventListener {
 
         public void use(GL gl) {
             gl.glMaterialfv(glFace, GL.GL_AMBIENT, ambient, 0);
-            gl.glMaterialfv(glFace, GL.GL_DIFFUSE, diffuse, 0);
+            gl.glMaterialfv(glFace, GL.GL_DIFFUSE, diffuse, 0); 
             gl.glMaterialfv(glFace, GL.GL_SPECULAR, specular, 0);
             gl.glMaterialfv(glFace, GL.GL_SHININESS, new float[]{shininess}, 0);
         }
@@ -193,11 +193,12 @@ public class GLRenderer implements GLEventListener {
         // Spheres
         for (int i = 0; i < MODEL_NUM; i++) {
             SphereModelGenerator.BasePolyhedron base =
-                    SphereModelGenerator.BasePolyhedron.OCTAHEDRON;
+                    i ==0 ? SphereModelGenerator.BasePolyhedron.OCTAHEDRON
+                    : SphereModelGenerator.BasePolyhedron.TETRAHEDRON;
             ModelBuilder builder = new ModelBuilder();
             builder.addDecorator(new NormalTextureFrontDecorator());
             s[i] =
-                    SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 5, builder, base);
+                    SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 8, builder, base);
             //s[i] = BoxModelGenerator.instance().createBox(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
 
             // TODO(mgagyi): This should be done by decorators in ModelBuilder
