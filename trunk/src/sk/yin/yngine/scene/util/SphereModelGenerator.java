@@ -6,6 +6,7 @@ import sk.yin.yngine.math.Point3f;
 import java.util.ArrayList;
 
 import java.util.List;
+import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
 
 /**
  * Creates mesh model of a sphere interpolated from a base mesh
@@ -64,6 +65,37 @@ public class SphereModelGenerator {
         4, 0, 5, 0, 1, 5 // Top
     };
 
+    protected static class SphereNormalDecorator implements Decorator {
+        private ModelBuilder builder;
+        public void setModelBuilder(ModelBuilder builder) {
+            this.builder = builder;
+        }
+
+        public void onNewVertex(int idx, Point3f vertex) {
+            if (builder != null) {
+                builder.addNormal(vertex.copy().normalize());
+            }
+        }
+
+        public void onKnownVertex(int idx, Point3f vertex) {
+        }
+
+        public void onNewNormal(int idx, Point3f normal) {
+        }
+
+        public void onKnownNormal(int idx, Point3f normal) {
+        }
+
+        public void onNewFace(int idx, Triple face) {
+            if (builder != null) {
+                builder.appendNormalIndexes(face);
+            }
+        }
+
+        public void onKnownFace(int idx, Triple face) {
+        }
+    }
+
     public enum BasePolyhedron {
         TETRAHEDRON, OCTAHEDRON, CUBE
     };
@@ -78,11 +110,12 @@ public class SphereModelGenerator {
         return instance;
     }
 
-    public Model createSphere(float r, int iter) {
-        return createSphere(r, iter, BasePolyhedron.TETRAHEDRON);
+    public Model createSphere(float r, int iter, ModelBuilder builder) {
+        return createSphere(r, iter, builder, BasePolyhedron.OCTAHEDRON);
     }
 
-    public Model createSphere(float r, int iter, BasePolyhedron base) {
+    public Model createSphere(float r, int iter, ModelBuilder builder,
+            BasePolyhedron base) {
         float[] verts;
         int[] faces;
 
@@ -102,21 +135,22 @@ public class SphereModelGenerator {
                 break;
         }
 
-        ModelBuilder mb = new ModelBuilder();
+        builder.addDecorator(new SphereNormalDecorator());
         List<Triple> triangles = createFaceTriangles(iter);
         for (int i = 0; i < faces.length; i += 3) {
-            interpolateTriangle(mb, verts, faces[i],
+            interpolateTriangle(builder, verts, faces[i],
                     faces[i + 1], faces[i + 2], iter);
             for (Triple t : triangles) {
-                mb.addFace(t, true);
-                mb.appendVerticesColor(0);
+                builder.addFace(t, true);
+                builder.appendVerticesColor(0);
             }
         }
-        mb.moveVerticesToRadius(r);
+        builder.moveVerticesToRadius(r);
 
-        return mb.toModel();
+        return builder.toModel();
     }
 
+    // TODO(yin): Does documentation sound familiar to anyone?
     protected void interpolateTriangle(ModelBuilder mb, float[] vtx, int vi1,
             int vi2, int vi3, int iter) {
         Point3f v1 =

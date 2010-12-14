@@ -21,6 +21,7 @@ public class Model {
     private ShaderProgram shader;
     private Texture texture;
     private boolean zCorrectCoord;
+    private float rf;
 
     public Model() {
         vertices = new float[]{};
@@ -64,7 +65,7 @@ public class Model {
         }
 
         if (!hasNormals) {
-            gl.glNormal3f(0f, 0f, 0f);
+            gl.glNormal3f(0f, 1f, 0f);
         }
         if (!hasColors) {
             gl.glColor3f(1f, 1f, 1f);
@@ -72,7 +73,7 @@ public class Model {
         if (!hasTexCoords) {
             gl.glTexCoord2f(0f, 0f);
         }
-
+        //*
         gl.glBegin(gl.GL_TRIANGLES);
         for (int i = 0; i < faces.length; i += flen) {
             for (int voff = i; voff < i + 3; voff++) {
@@ -98,23 +99,57 @@ public class Model {
                     if (idx > -1) {
                         gl.glTexCoord2fv(texCoords, idx);
                     }
-                    /*
-                    if (texture != null) {
-                    float d = this.getTextureCorrection(normals[nidx + 2]),
-                    s = normals[nidx] * d,
-                    t = normals[nidx + 1] * d;
-                    gl.glTexCoord2f(s, t);
-                    }
-                     */
                 }
                 idx = faces[voff];
                 gl.glVertex3fv(vertices, idx);
             }
         }
         gl.glEnd();
+        // */
+
+        renderNormals(gl, flen);
 
         if (texture != null) {
             texture.disable();
+        }
+    }
+
+    protected void renderNormals(GL gl, int flen) {
+        boolean hasNormals = normals != null;
+
+        if (hasNormals) {
+            ShaderProgram.unuseCurrent(gl);
+            gl.glDisable(GL.GL_LIGHTING);
+            gl.glDisable(GL.GL_TEXTURE_2D);
+            gl.glEnable(GL.GL_LINE_SMOOTH);
+            gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_FASTEST);
+            gl.glEnable(GL.GL_BLEND);
+            gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+
+            for (int i = 0; i < faces.length; i += flen) {
+                for (int voff = i; voff < i + 3; voff++) {
+                    int idx;
+
+                    idx = faces[voff];
+                    gl.glPushMatrix();
+                    gl.glTranslatef(vertices[idx], vertices[idx + 1], vertices[idx + 2]);
+                    idx = faces[voff + 3];
+                    if (idx > 0) {
+                        gl.glBegin(GL.GL_LINES);
+            gl.glColor4f(1f, 1f, 1f, 1f);
+                        gl.glVertex3f(0f, 0f, 0f);
+            gl.glColor4f(1f, 1f, 1f, 0.3f);
+                        gl.glVertex3f(normals[idx], normals[idx + 1], normals[idx + 2]);
+                        gl.glEnd();
+                    }
+                    gl.glPopMatrix();
+                }
+            }
+
+            gl.glEnable(GL.GL_LIGHTING);
+            gl.glEnable(GL.GL_DEPTH_TEST);
+            gl.glDisable(GL.GL_LINE_SMOOTH);
+            gl.glDisable(GL.GL_BLEND);
         }
     }
 
@@ -136,23 +171,5 @@ public class Model {
 
     public float[] colors() {
         return colors;
-    }
-
-    public void textureZCorrectCoord(boolean zCorrectCoord) {
-        this.zCorrectCoord = zCorrectCoord;
-    }
-
-    /**
-     * Computes D - the texture coordinate correction coefficient.
-     *
-     * @param nz
-     * @return
-     */
-    private float getTextureCorrection(float nz) {
-        if (zCorrectCoord) {
-            return 1.0f / (float) (Math.sin(Math.abs(nz)) + 1.0f);
-        } else {
-            return 1;
-        }
     }
 }
