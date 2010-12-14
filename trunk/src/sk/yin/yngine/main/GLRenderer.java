@@ -247,8 +247,8 @@ public class GLRenderer implements GLEventListener {
 
         // Balls
 
-        float x = -15.0f * (MODEL_NUM - 1),
-                xi = 30.0f;
+        float x = -30.0f * (MODEL_NUM - 1),
+                xi = 60.0f;
         for (int i = 0; i < MODEL_NUM; i++, x += xi) {
             GeometryAttribute geometry = new GeometryAttribute(s[i]);
             PhysicsAttribute physics =
@@ -273,9 +273,9 @@ public class GLRenderer implements GLEventListener {
                 bulletWorld.addRigidBody(body);
 
                 if (i == 0) {
-                    body.applyCentralImpulse(new Vector3f(100.0f, -50.0f, 10.0f));
+                    body.applyCentralImpulse(new Vector3f(300.0f, -100.0f, 10.0f));
                 } else {
-                    body.applyCentralImpulse(new Vector3f(-100.0f, 0.0f, -20.0f));
+                    body.applyCentralImpulse(new Vector3f(-200.0f, -50.0f, -20.0f));
                 }
             }
         }
@@ -311,7 +311,7 @@ public class GLRenderer implements GLEventListener {
 
         bulletWorld.stepSimulation(dt);
 
-        GenericSceneNode target = so[(int)(t1/5000%2)];
+        GenericSceneNode target = so[(int)(t1/8000%2)];
         camera.setTarget(target.attribute(PhysicsAttribute.class).origin());
 
         GL gl = drawable.getGL();

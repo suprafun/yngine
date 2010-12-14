@@ -29,9 +29,6 @@ public class LookAtCamera implements ISceneAttribute {
         glu.gluLookAt(position.x, position.y, position.z,
                 target.x, target.y, target.z,
                 up.x, up.y, up.z);
-        Log.log(position.x+","+ position.y+","+ position.z + "\t"
-                + target.x+","+ target.y+","+ target.z + "\t"
-                + up.x+","+ up.y+","+ up.z);
     }
 
     public void transformEnd(GL gl) {

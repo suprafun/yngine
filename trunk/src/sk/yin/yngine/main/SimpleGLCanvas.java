@@ -138,6 +138,7 @@ public class SimpleGLCanvas extends JFrame {
                 }
 
                 SimpleGLCanvas frame = new SimpleGLCanvas();
+                frame.setSize(480, 320);
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setVisible(true);
             }
