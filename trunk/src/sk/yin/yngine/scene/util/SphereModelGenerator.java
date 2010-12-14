@@ -68,15 +68,11 @@ public class SphereModelGenerator {
         4, 0, 5, 0, 1, 5 // Top
     };
 
-    protected static class SphereNormalDecorator implements Decorator {
-        private ModelBuilder builder;
+    protected static class SphereNormalDecorator extends BaseDecorator {
         private Map<Integer, Integer> vertexNormalMap =
                 new HashMap<Integer, Integer>();
 
-        public void setModelBuilder(ModelBuilder builder) {
-            this.builder = builder;
-        }
-
+        @Override
         public void onNewVertex(int idx, Point3f vertex) {
             if (builder != null) {
                 int i = builder.addNormal(vertex.copy().normalize());
@@ -84,21 +80,7 @@ public class SphereModelGenerator {
             }
         }
 
-        public void onKnownVertex(int idx, Point3f vertex) {
-        }
-
-        public void onNewNormal(int idx, Point3f normal) {
-        }
-
-        public void onKnownNormal(int idx, Point3f normal) {
-        }
-
-        public void onNewTexCoord(int idx, TexCoord2f texCoord) {
-        }
-
-        public void onKnownTexCoord(int idx, TexCoord2f texCoord) {
-        }
-
+        @Override
         public void onNewFace(int idx, Triple face) {
             if (builder != null) {
                 Triple normals = new Triple(vertexNormalMap.get(face.idx1),
@@ -106,12 +88,6 @@ public class SphereModelGenerator {
                         vertexNormalMap.get(face.idx3));
                 builder.appendNormalIndexes(normals);
             }
-        }
-
-        public void onKnownFace(int idx, Triple face) {
-        }
-
-        public void onNormalTriple(Triple normals) {
         }
     }
 
@@ -198,9 +174,7 @@ public class SphereModelGenerator {
                 // Add normal
 
                 mb.addNormal(pVertex.copy().normalize());
-                // Add color
-                _generateSomeVertexColor(mb, pVertex);
-            }
+                 }
         }
     }
 
@@ -220,28 +194,5 @@ public class SphereModelGenerator {
             }
         }
         return triangles;
-    }
-
-    public int _generateSomeVertexColor(ModelBuilder mb, Point3f v) {
-        Point3f c = new Point3f();
-        // TODO(mgagyi): Implement these switches as Strategy pattern
-        /*
-        float rr = (float) (Math.random() / 3 - (1.0 / 6));
-        float rg = (float) (Math.random() / 3 - (1.0 / 6));
-        float rb = (float) (Math.random() / 3 - (1.0 / 6));
-        c.x = (float) Math.random();
-        c.y = (float) Math.random();
-        c.z = (float) Math.random();
-        /*/
-        float rr = (float) Math.sin(Math.PI * v.x * 2) / 4;
-        rr = 0;
-        c.x = (float) Math.sin(v.x * 3);
-        c.y = (float) Math.sin(v.y * 3);
-        c.z = (float) Math.sin(v.z * 3);
-        //*/
-
-        int idx = mb.addColor(c);
-
-        return idx;
     }
 }

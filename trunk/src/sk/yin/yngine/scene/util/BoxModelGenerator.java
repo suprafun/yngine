@@ -13,14 +13,14 @@ public class BoxModelGenerator {
     private static BoxModelGenerator instance;
 
     private static final float cubeVertices[] = {
-        -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
         -1.0f,  1.0f, -1.0f,
          1.0f,  1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
         -1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f
+         1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
     };
     private static final int cubeFaces[] = {
         0, 1, 2,    1, 3, 2,    // Front
