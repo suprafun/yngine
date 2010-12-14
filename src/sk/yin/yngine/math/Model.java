@@ -136,9 +136,9 @@ public class Model {
                     idx = faces[voff + 3];
                     if (idx > 0) {
                         gl.glBegin(GL.GL_LINES);
-            gl.glColor4f(1f, 1f, 1f, 1f);
+                        gl.glColor4f(1f, 1f, 1f, 1f);
                         gl.glVertex3f(0f, 0f, 0f);
-            gl.glColor4f(1f, 1f, 1f, 0.3f);
+                        gl.glColor4f(1f, 1f, 1f, 0.3f);
                         gl.glVertex3f(normals[idx], normals[idx + 1], normals[idx + 2]);
                         gl.glEnd();
                     }
