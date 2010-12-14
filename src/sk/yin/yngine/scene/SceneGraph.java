@@ -9,13 +9,14 @@ import javax.media.opengl.GL;
  */
 public class SceneGraph {
     private ISceneNode root = new GenericSceneNode(new ISceneAttribute[] {});
-    private SceneCamera camera;
+    private LookAtCamera camera;
 
     public void frame(GL gl, float td) {
+        root.update(td);
+
         if(camera != null)
             camera.transform(gl);
 
-        root.update(td);
         root.render(gl);
 
         if(camera != null)
@@ -26,11 +27,11 @@ public class SceneGraph {
         root.addChild(node);
     }
 
-    public SceneCamera getCamera() {
+    public LookAtCamera getCamera() {
         return camera;
     }
 
-    public void setCamera(SceneCamera camera) {
+    public void setCamera(LookAtCamera camera) {
         this.camera = camera;
     }
 }

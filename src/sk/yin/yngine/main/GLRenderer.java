@@ -34,14 +34,15 @@ import sk.yin.yngine.particlesystem.SimpleFactory;
 import sk.yin.yngine.render.shaders.ShaderFactory;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import sk.yin.yngine.scene.util.TextureLoader;
-import sk.yin.yngine.scene.ParticleUnitAttribute;
-import sk.yin.yngine.scene.SceneCamera;
+import sk.yin.yngine.scene.LookAtCamera;
 import sk.yin.yngine.scene.SceneGraph;
 import sk.yin.yngine.scene.GenericSceneNode;
 import sk.yin.yngine.scene.GeometryAttribute;
 import sk.yin.yngine.scene.PhysicsAttribute;
+import sk.yin.yngine.scene.SmoothingCameraProxy;
 import sk.yin.yngine.scene.TransformAttribute;
 import sk.yin.yngine.scene.util.BoxModelGenerator;
+import sk.yin.yngine.scene.util.ModelBuilder;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -54,6 +55,7 @@ public class GLRenderer implements GLEventListener {
     float r;
     long t0 = 0, frames = 0;
     private SceneGraph scene;
+    private LookAtCamera camera;
     private static final int glFace = GL.GL_FRONT_AND_BACK;
     private int steps;
     ShaderProgram shader;
@@ -195,26 +197,21 @@ public class GLRenderer implements GLEventListener {
 
         for (int i = 0; i < MODEL_NUM; i++) {
             SphereModelGenerator.BasePolyhedron base =
-                    i == 0 ? SphereModelGenerator.BasePolyhedron.OCTAHEDRON
-                    : SphereModelGenerator.BasePolyhedron.CUBE;
-            s[i] =
-                    SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 1, base);
+                    SphereModelGenerator.BasePolyhedron.OCTAHEDRON;
+            ModelBuilder builder = new ModelBuilder();
+            s[i] = SphereModelGenerator.instance()
+                    .createSphere(SPHERE_RADIUS, 5, builder, base);
             //s[i] = BoxModelGenerator.instance().createBox(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
 
             // TODO(mgagyi): This should be done by decorators in ModelBuilder
             s[i].setTexture(texture);
-            s[i].textureZCorrectCoord(true);
 
             //* // Change color of models to white.
             float c[] = s[i].colors();
             for (int j = 0; j < c.length; j++) {
                 c[j] = 0.5f + c[j] / 2;
             }
-            //*/
-            if (i == 1) {
-                s[i].setShader(shader);
-            } else {
-            }
+            s[i].setShader(shader);
         }
         r = 0;
 
@@ -233,9 +230,12 @@ public class GLRenderer implements GLEventListener {
         // Scene graph
         //
         scene = new SceneGraph();
-        SceneCamera camera = new SceneCamera();
+        camera = new LookAtCamera();
+        camera.setPosition(new Vector3f(0, 50f, 200f));
+        camera = new SmoothingCameraProxy(camera);
+        camera.setPosition(new Vector3f(0, 10f, 80f));
+        scene.addChild(new GenericSceneNode(camera));
         scene.setCamera(camera);
-        camera.setPz(20.0f * (MODEL_NUM + 1));
         //scene.addChild(new GenericSceneNode(new ParticleUnitAttribute(e1)));
 
         // Ground
@@ -311,16 +311,8 @@ public class GLRenderer implements GLEventListener {
 
         bulletWorld.stepSimulation(dt);
 
-        /* // Old JBullet <-> scene sync
-        for(int i = 0; i < MODEL_NUM; i++) {
-        Transform transform = new Transform();
-        motionState[i].getWorldTransform(transform);
-        so[i].setPx(transform.origin.x);
-        so[i].setPy(transform.origin.y);
-        so[i].setPz(transform.origin.z);
-        }
-         *
-         */
+        GenericSceneNode target = so[(int)(t1/5000%2)];
+        camera.setTarget(target.attribute(PhysicsAttribute.class).origin());
 
         GL gl = drawable.getGL();
 

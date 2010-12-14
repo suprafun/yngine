@@ -18,15 +18,33 @@ public class ModelBuilder {
     private List<Triple> faceColors = new ArrayList<Triple>();
     private List<Triple> faceNormals = new ArrayList<Triple>();
     private List<Triple> faceTexCoords = new ArrayList<Triple>();
+    private List<Decorator> decorators = new ArrayList<Decorator>();
+
+    public static interface Decorator {
+        public void setModelBuilder(ModelBuilder builder);
+        public void onNewVertex(int idx, Point3f vertex);
+        public void onKnownVertex(int idx, Point3f vertex);
+        public void onNewNormal(int idx, Point3f normal);
+        public void onKnownNormal(int idx, Point3f normal);
+        public void onNewFace(int idx, Triple face);
+        public void onKnownFace(int idx, Triple face);
+    }
 
     public ModelBuilder() {
     }
 
-    public int addVertex(Point3f v) {
-        int idx = vertices.indexOf(v);
+    public int addVertex(Point3f vertex) {
+        int idx = vertices.indexOf(vertex);
         if (idx == -1) {
-            vertices.add(v.copy());
+            vertices.add(vertex.copy());
             idx = vertices.size() - 1;
+            for (Decorator decorator : decorators) {
+                decorator.onNewVertex(idx, vertex);
+            }
+        } else {
+            for (Decorator decorator : decorators) {
+                decorator.onKnownVertex(idx, vertex);
+            }
         }
         verticleCache.add(idx);
         return idx;
@@ -63,15 +81,22 @@ public class ModelBuilder {
         return addFace(t, false);
     }
 
-    public int addFace(Triple t, boolean mapFace) {
+    public int addFace(Triple face, boolean mapFace) {
         if (mapFace) {
-            t = mapFaceIndexes(t);
+            face = mapFaceIndexes(face);
         }
 
-        int idx = faceTriangles.indexOf(t);
+        int idx = faceTriangles.indexOf(face);
         if (idx == -1) {
             idx = faceTriangles.size();
-            faceTriangles.add(t);
+            faceTriangles.add(face);
+            for (Decorator decorator : decorators) {
+                decorator.onNewFace(idx, face);
+            }
+        } else {
+            for (Decorator decorator : decorators) {
+                decorator.onKnownFace(idx, face);
+            }
         }
         return idx;
     }
@@ -92,14 +117,25 @@ public class ModelBuilder {
         appendColorIndexes(new Triple(addColor(new Point3f(r, g, b))));
     }
 
+    // TODO(yin): Rename to something meaningful
     public void appendVerticesColor(int offset) {
-        Triple f = faceTriangles.get(faceTriangles.size()-1),
-            c = new Triple(
-                f.idx1+offset,
-                f.idx2+offset,
-                f.idx3+offset
-            );
+        Triple f = faceTriangles.get(faceTriangles.size() - 1),
+                c = new Triple(
+                f.idx1 + offset,
+                f.idx2 + offset,
+                f.idx3 + offset);
         appendColorIndexes(c);
+    }
+
+    public void addDecorator(Decorator decorator) {
+        if (decorator != null) {
+            decorators.add(decorator);
+            decorator.setModelBuilder(this);
+        }
+    }
+
+    public void removeDecorator(Decorator decorator) {
+        decorators.remove(decorator);
     }
 
     /**
@@ -136,12 +172,15 @@ public class ModelBuilder {
                 tcs = null;
         int[] fs = new int[faceTriangles.size() * flen];
 
-        if(hasNormals)
+        if (hasNormals) {
             ns = new float[normals.size() * 3];
-        if(hasColors)
+        }
+        if (hasColors) {
             cs = new float[colors.size() * 3];
-        if(hasTexCoords)
+        }
+        if (hasTexCoords) {
             tcs = new float[texCoords.size() * 2];
+        }
 
         for (int i = 0; i < vertices.size(); i++) {
             Point3f v = vertices.get(i);
@@ -169,39 +208,39 @@ public class ModelBuilder {
         for (int i = 0; i < faceTriangles.size(); i++) {
             Triple t = faceTriangles.get(i);
             int fi = flen * i;
-            fs[fi++] = t.idx1*3;
-            fs[fi++] = t.idx2*3;
-            fs[fi++] = t.idx3*3;
+            fs[fi++] = t.idx1 * 3;
+            fs[fi++] = t.idx2 * 3;
+            fs[fi++] = t.idx3 * 3;
 
-            if(hasNormals) {
-                if(i < faceNormals.size()) {
+            if (hasNormals) {
+                if (i < faceNormals.size()) {
                     t = faceNormals.get(i);
-                    fs[fi++] = t.idx1*3;
-                    fs[fi++] = t.idx2*3;
-                    fs[fi++] = t.idx3*3;
-                 } else {
+                    fs[fi++] = t.idx1 * 3;
+                    fs[fi++] = t.idx2 * 3;
+                    fs[fi++] = t.idx3 * 3;
+                } else {
                     fs[fi++] = fs[fi++] = fs[fi++] = -1;
-                 }
+                }
             }
-            if(hasColors) {
-                if(i < faceColors.size()) {
+            if (hasColors) {
+                if (i < faceColors.size()) {
                     t = faceColors.get(i);
-                    fs[fi++] = t.idx1*3;
-                    fs[fi++] = t.idx2*3;
-                    fs[fi++] = t.idx3*3;
-                 } else {
+                    fs[fi++] = t.idx1 * 3;
+                    fs[fi++] = t.idx2 * 3;
+                    fs[fi++] = t.idx3 * 3;
+                } else {
                     fs[fi++] = fs[fi++] = fs[fi++] = -1;
-                 }
+                }
             }
-            if(hasTexCoords) {
-                if(i < faceTexCoords.size()) {
+            if (hasTexCoords) {
+                if (i < faceTexCoords.size()) {
                     t = faceTexCoords.get(i);
-                    fs[fi++] = t.idx1*2;
-                    fs[fi++] = t.idx2*2;
-                    fs[fi++] = t.idx3*2;
-                 } else {
+                    fs[fi++] = t.idx1 * 2;
+                    fs[fi++] = t.idx2 * 2;
+                    fs[fi++] = t.idx3 * 2;
+                } else {
                     fs[fi++] = fs[fi++] = fs[fi++] = -1;
-                 }
+                }
             }
         }
 
