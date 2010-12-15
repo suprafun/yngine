@@ -50,7 +50,7 @@ public class Model {
         boolean hasTexCoords = texCoords != null;
         int flen = getFaceLen();
 
-        if (texture != null) {
+        if (texture != null && hasTexCoords) {
             texture.enable();
             texture.bind();
         } else {
@@ -69,15 +69,9 @@ public class Model {
         if (!hasColors) {
             gl.glColor3f(1f, 1f, 1f);
         }
-        if (!hasTexCoords) {
-            gl.glTexCoord2f(0f, 0f);
-        }
 
         gl.glBegin(gl.GL_TRIANGLES);
         for (int i = 0; i < faces.length; i += flen) {
-            boolean firstVertex = faces[i] == 0
-                    || faces[i + 1] == 0
-                    || faces[i + 2] == 0;
             for (int voff = i; voff < i + 3; voff++) {
                 int idx, off = voff;
 
@@ -146,7 +140,7 @@ public class Model {
                             // these are already rendered.
                         } else {
                             gl.glColor4f(1f, 1f, 1f, 1f);
-                            if (hasColors) {
+                            if (hasColors && idxc > -1) {
                                     gl.glColor3f(colors[idxc],
                                             colors[idxc + 1],
                                             colors[idxc + 2]);

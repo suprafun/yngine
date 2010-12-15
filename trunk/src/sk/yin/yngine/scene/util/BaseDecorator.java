@@ -1,6 +1,7 @@
 package sk.yin.yngine.scene.util;
 
 import javax.vecmath.TexCoord2f;
+import javax.vecmath.Vector3f;
 import sk.yin.yngine.math.Point3f;
 import sk.yin.yngine.math.Triple;
 import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
@@ -10,7 +11,7 @@ import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
  * 
  * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
-public abstract class BaseDecorator implements Decorator {
+public  class BaseDecorator implements Decorator {
     protected ModelBuilder builder;
 
     public void setModelBuilder(ModelBuilder builder) {
@@ -48,5 +49,18 @@ public abstract class BaseDecorator implements Decorator {
     }
 
     public void onNormalTriple(Triple normals) {
+    }
+
+    public void onBegin(Vector3f boundingBox) {
+    }
+
+    public void onEnd() {
+    }
+
+    protected Point3f normalize(Point3f point, Vector3f boundingBox) {
+        Point3f bb = new Point3f(boundingBox);
+        Point3f norm = point.copy()
+                    .divide(bb).add(1f).multiply(0.5f);
+        return norm;
     }
 }

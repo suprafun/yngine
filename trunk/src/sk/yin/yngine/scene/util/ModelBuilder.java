@@ -6,6 +6,8 @@ import sk.yin.yngine.math.Point3f;
 import java.util.ArrayList;
 import java.util.List;
 import javax.vecmath.TexCoord2f;
+import javax.vecmath.Vector3f;
+import sk.yin.yngine.util.Log;
 
 public class ModelBuilder {
     private List<Point3f> vertices = new ArrayList<Point3f>();
@@ -19,9 +21,14 @@ public class ModelBuilder {
     private List<Triple> faceNormals = new ArrayList<Triple>();
     private List<Triple> faceTexCoords = new ArrayList<Triple>();
     private List<Decorator> decorators = new ArrayList<Decorator>();
+    private Vector3f boundingBox;
 
     public static interface Decorator {
         public void setModelBuilder(ModelBuilder builder);
+
+        public void onBegin(Vector3f boundingBox);
+
+        public void onEnd();
 
         public void onNewVertex(int idx, Point3f vertex);
 
@@ -51,6 +58,27 @@ public class ModelBuilder {
     }
 
     public ModelBuilder() {
+    }
+
+    public void begin(Vector3f boundingBox) {
+        this.boundingBox = boundingBox;
+        for (Decorator decorator : decorators) {
+            decorator.onBegin(boundingBox);
+        }
+    }
+
+    public Model end() {
+        if (boundingBox != null) {
+            for (Decorator decorator : decorators) {
+                decorator.onEnd();
+            }
+            return toModel();
+        }
+        return null;
+    }
+
+    public Vector3f boundingBox() {
+        return boundingBox;
     }
 
     public int addVertex(Point3f vertex) {
@@ -103,6 +131,7 @@ public class ModelBuilder {
             for (Decorator decorator : decorators) {
                 decorator.onNewTexCoord(idx, texCoord);
             }
+            Log.log("tc " + texCoord.x + "," + texCoord.y);
         } else {
             for (Decorator decorator : decorators) {
                 decorator.onKnownTexCoord(idx, texCoord);
@@ -137,7 +166,7 @@ public class ModelBuilder {
 
     public void appendNormalIndexes(Triple normals) {
         faceNormals.add(normals);
-        for(Decorator decorator : decorators) {
+        for (Decorator decorator : decorators) {
             decorator.onNormalTriple(normals);
         }
     }
@@ -150,25 +179,26 @@ public class ModelBuilder {
         faceTexCoords.add(texCoords);
     }
 
+    /**
+     * @deprecated
+     */
     public void addAndAppendColor(float r, float g, float b) {
         appendColorIndexes(new Triple(addColor(new Point3f(r, g, b))));
     }
 
-    // TODO(yin): Rename to something meaningful
-    public void appendVerticesColor(int offset) {
-        Triple f = faceTriangles.get(faceTriangles.size() - 1),
-                c = new Triple(
-                f.idx1 + offset,
-                f.idx2 + offset,
-                f.idx3 + offset);
-        appendColorIndexes(c);
-    }
-
-    public void addDecorator(Decorator decorator) {
+    public ModelBuilder addDecorator(Decorator decorator) {
         if (decorator != null) {
             decorators.add(decorator);
             decorator.setModelBuilder(this);
         }
+        return this;
+    }
+
+    public ModelBuilder addDecorators(Decorator... decorators) {
+        for (Decorator decorator : decorators) {
+            addDecorator(decorator);
+        }
+        return this;
     }
 
     public void removeDecorator(Decorator decorator) {
@@ -194,7 +224,7 @@ public class ModelBuilder {
         }
     }
 
-    public Model toModel() {
+    protected Model toModel() {
         boolean hasNormals = normals.size() > 0;
         boolean hasColors = colors.size() > 0;
         boolean hasTexCoords = texCoords.size() > 0;
@@ -280,7 +310,6 @@ public class ModelBuilder {
                 }
             }
         }
-
         return new Model(vs, ns, cs, tcs, fs);
     }
 }

@@ -13,6 +13,7 @@ void main() {
     if(true) {
         texel = texture2D(texture, gl_TexCoord[0].st);
     }
+    texel = texel * gl_Color;
 
     /* a fragment shader can't write a varying variable, hence we need a new
      * variable to store the normalized interpolated normal */

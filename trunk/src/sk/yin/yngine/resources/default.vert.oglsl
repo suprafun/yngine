@@ -15,7 +15,7 @@ void main() {
     halfVector = normalize(gl_LightSource[0].halfVector.xyz);
 
     /* Compute the diffuse, ambient and globalAmbient terms */
-    diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse * gl_Color;
+    diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
     ambient = gl_FrontMaterial.ambient * gl_LightSource[0].ambient;
     ambient += gl_LightModel.ambient * gl_FrontMaterial.ambient;
     ambient = ambient * gl_Color;

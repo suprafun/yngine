@@ -36,6 +36,7 @@ public class TextureLoader {
     public Texture load(URL url) {
         Texture texture = null;
         try {
+            // TODO(yin): Create better mipmap the the autogeneration algorithm.
             texture = TextureIO.newTexture(url, true, null);
         } catch (IOException ex) {
             ex.printStackTrace();

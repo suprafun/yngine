@@ -12,28 +12,27 @@ import sk.yin.yngine.math.Triple;
  *
  * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
-public class NormalBasedTextureDecorator extends BaseDecorator {
+public class VertexBasedTextureDecorator extends BaseDecorator {
     private Map<Integer, Integer> map =
             new HashMap<Integer, Integer>();
     // TODO(yin): Finish rotations; Point3f, Vector3f conflict;
     private Matrix3f rotation;
+    private float scaleX;
+    private float scaleY;
 
-    public NormalBasedTextureDecorator() {
+    public VertexBasedTextureDecorator() {
         rotation = new Matrix3f();
         rotation.setIdentity();
+        scaleX = scaleY = 1.0f;
     }
 
-    public NormalBasedTextureDecorator(Matrix3f rotation) {
+    public VertexBasedTextureDecorator(float scaleX, float scaleY) {
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
+    }
+
+    public VertexBasedTextureDecorator(Matrix3f rotation) {
         this.rotation = rotation;
-    }
-
-    /**
-     * Computes D - the texture coordinate correction coefficient.
-     * @param normalZ Z coordinate of normal
-     * @return Displacement coefficient of texture coordinate.
-     */
-    protected float getTextureCorrection(float normalZ) {
-        return 1.0f / (float) (Math.sin(Math.abs(normalZ)) + 1.0f);
     }
 
     public Matrix3f getRotation() {
@@ -45,22 +44,23 @@ public class NormalBasedTextureDecorator extends BaseDecorator {
     }
 
     @Override
-    public void onNewNormal(int idx, Point3f normal) {
+    public void onNewVertex(int idx, Point3f vertex) {
         if (builder != null) {
-            Point3f nn = normal.copy().normalize();
-            float d = getTextureCorrection(nn.z);
-            TexCoord2f texCoord = new TexCoord2f(nn.x * d, nn.y * d);
+            Point3f nv = normalize(vertex, builder.boundingBox());
+            TexCoord2f texCoord = new TexCoord2f(
+                    (nv.x + nv.z) * scaleX,
+                    (nv.y + nv.z) * scaleY);
             int i = builder.addTexCoord(texCoord);
             map.put(idx, i);
         }
     }
 
     @Override
-    public void onNormalTriple(Triple normals) {
+    public void onNewFace(int idx, Triple face) {
         if (builder != null) {
-            Triple texCoords = new Triple(map.get(normals.idx1),
-                    map.get(normals.idx2),
-                    map.get(normals.idx3));
+            Triple texCoords = new Triple(map.get(face.idx1),
+                    map.get(face.idx2),
+                    map.get(face.idx3));
             builder.appendTexCoordIndexes(texCoords);
         }
     }

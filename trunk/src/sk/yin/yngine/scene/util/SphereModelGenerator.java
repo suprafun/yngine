@@ -9,6 +9,7 @@ import java.util.HashMap;
 
 import java.util.List;
 import java.util.Map;
+import javax.vecmath.Vector3f;
 import sk.yin.yngine.scene.util.ModelBuilder.Decorator;
 
 /**
@@ -105,11 +106,11 @@ public class SphereModelGenerator {
         return instance;
     }
 
-    public Model createSphere(float r, int iter, ModelBuilder builder) {
-        return createSphere(r, iter, builder, BasePolyhedron.OCTAHEDRON);
+    public Model createSphere(float radius, int iter, ModelBuilder builder) {
+        return createSphere(radius, iter, builder, BasePolyhedron.OCTAHEDRON);
     }
 
-    public Model createSphere(float r, int iter, ModelBuilder builder,
+    public Model createSphere(float radius, int iter, ModelBuilder builder,
             BasePolyhedron base) {
         float[] verts;
         int[] faces;
@@ -131,18 +132,18 @@ public class SphereModelGenerator {
         }
 
         builder.addDecorator(new SphereNormalDecorator());
+        builder.begin(new Vector3f(radius, radius, radius));
         List<Triple> triangles = createFaceTriangles(iter);
         for (int i = 0; i < faces.length; i += 3) {
             interpolateTriangle(builder, verts, faces[i],
                     faces[i + 1], faces[i + 2], iter);
             for (Triple t : triangles) {
                 builder.addFace(t, true);
-                builder.appendVerticesColor(0);
             }
         }
-        builder.moveVerticesToRadius(r);
+        builder.moveVerticesToRadius(radius);
 
-        return builder.toModel();
+        return builder.end();
     }
 
     // TODO(yin): Does documentation sound familiar to anyone?
