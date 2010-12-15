@@ -43,8 +43,10 @@ import sk.yin.yngine.scene.SmoothingCameraProxy;
 import sk.yin.yngine.scene.TransformAttribute;
 import sk.yin.yngine.scene.util.BoxModelGenerator;
 import sk.yin.yngine.scene.util.ModelBuilder;
+import sk.yin.yngine.scene.util.NormalBasedColorDecorator;
 import sk.yin.yngine.scene.util.NormalBasedTextureDecorator;
-import sk.yin.yngine.scene.util.VertexBasedColorRGBDecorator;
+import sk.yin.yngine.scene.util.VertexBasedColorDecorator;
+import sk.yin.yngine.scene.util.VertexBasedTextureDecorator;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -68,6 +70,7 @@ public class GLRenderer implements GLEventListener {
     private static final boolean DISABLE_LIGHTING = false;
     private static final float SPHERE_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
+    private RigidBody b1;
 
     private enum MaterialDef {
         Copper(0.3f, 0.7f, 0.6f, 6.0f, 1.8f, 228, 123, 87),
@@ -132,7 +135,10 @@ public class GLRenderer implements GLEventListener {
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{0.0f, 1.0f, 1.0f, 0.0f}, 0);
+
+        Point3f l = new Point3f(2.0f, 1.0f, 1.0f);
+        l.normalize();
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{l.x, l.y, l.z, 0.0f}, 0);
 
         MaterialDef.Full.use(gl);
         gl.glColorMaterial(glFace, GL.GL_DIFFUSE);
@@ -147,7 +153,7 @@ public class GLRenderer implements GLEventListener {
         //
         URL url;
         String filenames[] = new String[]{
-            "tex07.png",
+            //"tex07.png",
             "tex06.2.png",
             //"tex05-c.png",
             "tex05.png",
@@ -178,7 +184,7 @@ public class GLRenderer implements GLEventListener {
         //
         {
             CollisionShape shape =
-                    new BoxShape(new Vector3f(100.0f, 10.0f, 100.0f));
+                    new BoxShape(new Vector3f(100.0f - 0.04f, 10.0f - 0.04f, 100.0f - 0.04f));
 
             Transform transform = new Transform();
             transform.origin.set(new Vector3f(0.0f, -30.0f, 0.0f));
@@ -186,7 +192,7 @@ public class GLRenderer implements GLEventListener {
             DefaultMotionState motion = new DefaultMotionState(transform);
             RigidBodyConstructionInfo rbInfo =
                     new RigidBodyConstructionInfo(0, motion, shape);
-            rbInfo.restitution = 0.8f;
+            rbInfo.restitution = 0.6f;
 
             groundBody = new RigidBody(rbInfo);
             bulletWorld.addRigidBody(groundBody);
@@ -198,15 +204,21 @@ public class GLRenderer implements GLEventListener {
                     SphereModelGenerator.BasePolyhedron.OCTAHEDRON;
             ModelBuilder builder = new ModelBuilder();
             if (i%2 == 0) {
-                builder.addDecorator(new NormalBasedTextureDecorator());
+                Log.log("s");
+                builder.addDecorators(
+                        new VertexBasedColorDecorator(),
+                        new NormalBasedTextureDecorator());
                 s[i] = SphereModelGenerator.instance()
                         .createSphere(SPHERE_RADIUS, 5, builder, base);
                 // TODO(mgagyi): This should be done by decorators in ModelBuilder
-                s[i].setTexture(texture);
+                //s[i].setTexture(texture);
             } else {
-                builder.addDecorator(new VertexBasedColorRGBDecorator());
+                builder.addDecorators(
+                        new VertexBasedColorDecorator());
                 s[i] = BoxModelGenerator.instance()
-                        .createBox(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
+                        .createBox(builder, SPHERE_RADIUS, SPHERE_RADIUS,
+                            SPHERE_RADIUS);
+                //s[i].setTexture(texture);
             }
 
             s[i].setShader(shader);
@@ -229,7 +241,7 @@ public class GLRenderer implements GLEventListener {
         //
         scene = new SceneGraph();
         camera = new LookAtCamera();
-        camera.setPosition(new Vector3f(0, 50f, 1000f));
+        camera.setPosition(new Vector3f(333f, 250f, 1000f));
         camera = new SmoothingCameraProxy(camera);
         camera.setPosition(new Vector3f(0, 10f, 80f));
         scene.addChild(new GenericSceneNode(camera));
@@ -237,7 +249,12 @@ public class GLRenderer implements GLEventListener {
         //scene.addChild(new GenericSceneNode(new ParticleUnitAttribute(e1)));
 
         // Ground
-        Model box = BoxModelGenerator.instance().createBox(100f, 10f, 100f);
+        Model box = BoxModelGenerator.instance().createBox(
+                new ModelBuilder().addDecorators(
+                    new NormalBasedColorDecorator(),
+                    new VertexBasedTextureDecorator(5f, 5f)),
+                100f, 10f, 100f);
+        box.setTexture(texture);
         box.setShader(shader);
         GenericSceneNode node = new GenericSceneNode(
                 new GeometryAttribute(box),
@@ -246,12 +263,12 @@ public class GLRenderer implements GLEventListener {
 
         // Balls
 
-        float x = -30.0f * (MODEL_NUM - 1),
-                xi = 60.0f;
+        float x = -75.0f * (MODEL_NUM - 1),
+                xi = 150.0f;
         for (int i = 0; i < MODEL_NUM; i++, x += xi) {
             GeometryAttribute geometry = new GeometryAttribute(s[i]);
             PhysicsAttribute physics =
-                    new PhysicsAttribute(new Vector3f(x, 0, 0));
+                    new PhysicsAttribute(new Vector3f(x, 20f, 0));
             GenericSceneNode obj = new GenericSceneNode(geometry, physics);
             scene.addChild(obj);
             so[i] = obj;
@@ -262,7 +279,9 @@ public class GLRenderer implements GLEventListener {
                     shape = new SphereShape(SPHERE_RADIUS);
                 } else {
                     shape = new BoxShape(new Vector3f(
-                            SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS));
+                            SPHERE_RADIUS - 0.04f,
+                            SPHERE_RADIUS - 0.04f,
+                            SPHERE_RADIUS - 0.04f));
                 }
                 Transform transform = new Transform();
                 transform.origin.set(new Vector3f(x, 0.0f, 0.0f));
@@ -271,17 +290,17 @@ public class GLRenderer implements GLEventListener {
                 shape.calculateLocalInertia(SPHERE_MASS, localInertia);
                 RigidBodyConstructionInfo rbInfo =
                         new RigidBodyConstructionInfo(SPHERE_MASS, motionState[i], shape, localInertia);
-                rbInfo.restitution = 0.5f;
+                rbInfo.restitution = 0.1f;
 
                 RigidBody body = new RigidBody(rbInfo);
 
                 bulletWorld.addRigidBody(body);
 
                 if (i == 0) {
-                    body.applyCentralImpulse(new Vector3f(300.0f, -100.0f, 10.0f));
+                    body.applyCentralImpulse(new Vector3f(300.0f, -150.0f, 10.0f));
                 } else {
-                    body.applyCentralImpulse(new Vector3f(-200.0f, -50.0f, -20.0f));
-                    body.applyTorqueImpulse(new Vector3f(200f, 500f, 1000f));
+                    body.applyCentralImpulse(new Vector3f(-200.0f, -100.0f, -20.0f));
+                    b1 = body;
                 }
             }
         }
@@ -318,8 +337,15 @@ public class GLRenderer implements GLEventListener {
         if (dt > .2) {
             dt = 0.2f;
         }
+
+        if(t0 % 400 > t1 % 400) {
+            b1.applyTorqueImpulse(new Vector3f(
+                    (float)(Math.random() * 2000 - 1000),
+                    (float)(Math.random() * 500 - 250),
+                    (float)(Math.random() * 2000 - 1000)));
+        }
         
-        bulletWorld.stepSimulation(dt*2.5f, (int)(60/5*2.5f));
+        bulletWorld.stepSimulation(dt*2.0f, (int)(60/5*2.0f));
 
         GenericSceneNode target = so[(int) (t1 / 8000 % 2)];
         camera.setTarget(target.attribute(PhysicsAttribute.class).origin());
@@ -338,16 +364,7 @@ public class GLRenderer implements GLEventListener {
         }
 
         r += (dt * 5);
-        /* // Old rotation
-        //int i0 = ((int)r / 100) % 10;
-        for (int i = 0; i < MODEL_NUM; i++) {
-        so[i].setRx(r * 2);
-        so[i].setRy(r * 3);
-        so[i].setRz(r * 5);
-        }
-         * 
-         */
-
+     
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
         scene.frame(gl, dt);
@@ -364,18 +381,6 @@ public class GLRenderer implements GLEventListener {
     public void destroy(GL gl) {
         if (shader != null) {
             shader.destroy(gl);
-        }
-    }
-
-    class MyMotionState extends DefaultMotionState {
-        MyMotionState(Transform transform) {
-            super(transform);
-            System.out.println(transform.toString());
-        }
-
-        public void setWorldTransform(Transform centerOfMassWorldTrans) {
-            super.setWorldTransform(centerOfMassWorldTrans);
-            System.out.println(centerOfMassWorldTrans.toString());
         }
     }
 }

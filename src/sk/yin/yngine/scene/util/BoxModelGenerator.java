@@ -1,5 +1,6 @@
 package sk.yin.yngine.scene.util;
 
+import javax.vecmath.Vector3f;
 import sk.yin.yngine.math.Model;
 import sk.yin.yngine.math.Point3f;
 import sk.yin.yngine.math.Triple;
@@ -55,27 +56,21 @@ public class BoxModelGenerator {
         return instance;
     }
 
-    public Model createBox(float x, float y, float z) {
+    public Model createBox(ModelBuilder builder, float x, float y, float z) {
         Point3f scale = new Point3f(x, y, z);
-        ModelBuilder mb = new ModelBuilder();
+        builder.begin(new Vector3f(x, y, z));
         for(int i = 0, l = cubeVertices.length; i < l; i += 3) {
             Point3f vertex = new Point3f(cubeVertices[i], cubeVertices[i+1], cubeVertices[i+2]);
             vertex.multiply(scale);
-            mb.addVertex(vertex);
-            mb.addColor(new Point3f(
-                    (float) cubeVertices[i]/2+.5f,
-                    (float) cubeVertices[i+1]/2+.5f,
-                    (float) cubeVertices[i+2]/2+.5f
-            ));
+            builder.addVertex(vertex);
         }
         for(int i = 0, l = cubeFaces.length; i < l; i += 3) {
             Triple triangle = new Triple(cubeFaces[i], cubeFaces[i+1], cubeFaces[i+2]);
             Point3f normal = new Point3f(cubeNormals[i], cubeNormals[i+1], cubeNormals[i+2]);
-            mb.addFace(triangle);
-            int idx = mb.addNormal(normal);
-            mb.appendNormalIndexes(new Triple(idx));
-            mb.appendVerticesColor(0);
+            builder.addFace(triangle);
+            int idx = builder.addNormal(normal);
+            builder.appendNormalIndexes(new Triple(idx));
         }
-        return mb.toModel();
+        return builder.end();
     }
 }

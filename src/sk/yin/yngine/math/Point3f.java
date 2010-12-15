@@ -1,5 +1,7 @@
 package sk.yin.yngine.math;
 
+import javax.vecmath.Vector3f;
+
 public class Point3f {
     public static final Point3f BASE = new Point3f();
     public float x, y, z;
@@ -11,6 +13,12 @@ public class Point3f {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    public Point3f(Vector3f btVector3f) {
+        this.x = btVector3f.x;
+        this.y = btVector3f.y;
+        this.z = btVector3f.z;
     }
 
     //

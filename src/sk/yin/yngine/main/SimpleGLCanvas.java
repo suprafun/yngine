@@ -39,7 +39,7 @@ public class SimpleGLCanvas extends JFrame {
     /** Creates new form MainFrame */
     public SimpleGLCanvas() {
         initComponents();
-        setTitle("Simple JOGL Application");
+        setTitle("Yngine game engine");
 
         glRenderer = new GLRenderer();
         canvas.addGLEventListener(glRenderer);
