@@ -1,4 +1,4 @@
-package sk.yin.yngine.scene;
+package sk.yin.yngine.scene.attributes;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Vector3f;

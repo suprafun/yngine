@@ -19,7 +19,7 @@ import com.bulletphysics.linearmath.Transform;
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
 import javax.media.opengl.DebugGL;
-import sk.yin.yngine.scene.util.SphereModelGenerator;
+import sk.yin.yngine.scene.generators.SphereModelGenerator;
 import sk.yin.yngine.math.Model;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
@@ -33,20 +33,20 @@ import sk.yin.yngine.particlesystem.SimpleConfig;
 import sk.yin.yngine.particlesystem.SimpleFactory;
 import sk.yin.yngine.render.shaders.ShaderFactory;
 import sk.yin.yngine.render.shaders.ShaderProgram;
-import sk.yin.yngine.scene.util.TextureLoader;
-import sk.yin.yngine.scene.LookAtCamera;
+import sk.yin.yngine.scene.io.TextureLoader;
+import sk.yin.yngine.scene.camera.LookAtCamera;
 import sk.yin.yngine.scene.SceneGraph;
 import sk.yin.yngine.scene.GenericSceneNode;
-import sk.yin.yngine.scene.GeometryAttribute;
-import sk.yin.yngine.scene.PhysicsAttribute;
-import sk.yin.yngine.scene.SmoothingCameraProxy;
-import sk.yin.yngine.scene.TransformAttribute;
-import sk.yin.yngine.scene.util.BoxModelGenerator;
-import sk.yin.yngine.scene.util.ModelBuilder;
-import sk.yin.yngine.scene.util.NormalBasedColorDecorator;
-import sk.yin.yngine.scene.util.NormalBasedTextureDecorator;
-import sk.yin.yngine.scene.util.VertexBasedColorDecorator;
-import sk.yin.yngine.scene.util.VertexBasedTextureDecorator;
+import sk.yin.yngine.scene.attributes.GeometryAttribute;
+import sk.yin.yngine.scene.attributes.PhysicsAttribute;
+import sk.yin.yngine.scene.camera.SmoothingCameraProxy;
+import sk.yin.yngine.scene.attributes.TransformAttribute;
+import sk.yin.yngine.scene.decorators.NormalBasedColorDecorator;
+import sk.yin.yngine.scene.generators.BoxModelGenerator;
+import sk.yin.yngine.scene.generators.ModelBuilder;
+import sk.yin.yngine.scene.decorators.NormalBasedTextureDecorator;
+import sk.yin.yngine.scene.decorators.StaticColorDecorator;
+import sk.yin.yngine.scene.decorators.VertexBasedColorDecorator;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -79,15 +79,21 @@ public class GLRenderer implements GLEventListener {
         Glass(0.3f, 0.7f, 0.7f, 32.00f, 1.0f, 199, 227, 208),
         Plastic(0.3f, 0.9f, 0.9f, 32.0f, 1.0f, 0, 19, 252),
         Pearl(1.5f, -0.5f, 2.0f, 99.0f, 1.0f, 255, 138, 138),
-        Full(0.4f, 0.7f, 0.7f, 16.0f, 1.0f, 255, 255, 255),
-        Half(0.2f, 0.4f, 0.6f, 32.0f, 1.0f, 255, 255, 255);
+        Full(0.4f, 0.7f, 0.7f, 32.0f, 1.0f, 255, 255, 255),
+        Half(0.2f, 0.4f, 0.4f, 16.0f, 1.0f, 255, 255, 255);
         public final float ambient[], diffuse[], specular[], shininess, briliance, c[];
 
         MaterialDef(float ambient, float diffuse, float specular, float shinines,
                 float brilliance, int r, int g, int b) {
-            this.ambient = new float[]{ambient, ambient, ambient, 1.0f};
-            this.diffuse = new float[]{diffuse, diffuse, diffuse, 1.0f};
-            this.specular = new float[]{specular, specular, specular, 1.0f};
+            float rf = (float) r / 255f,
+                    gf = (float) g / 255f,
+                    bf = (float) b / 255f;
+            this.ambient =
+                    new float[]{ambient * rf, ambient * gf, ambient * bf, 1.0f};
+            this.diffuse =
+                    new float[]{diffuse * rf, diffuse * gf, diffuse * bf, 1.0f};
+            this.specular =
+                    new float[]{specular * rf, specular * gf, specular * bf, 1.0f};
             this.shininess = shinines;
             this.briliance = brilliance;
             c =
@@ -128,17 +134,8 @@ public class GLRenderer implements GLEventListener {
         gl.glDepthFunc(gl.GL_LESS);
 
         gl.glEnable(gl.GL_LIGHTING);
-        gl.glEnable(gl.GL_LIGHT0);
         gl.glLightModeli(GL.GL_LIGHT_MODEL_COLOR_CONTROL,
                 GL.GL_SEPARATE_SPECULAR_COLOR);
-
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, new float[]{1.0f, 1.0f, 1.0f, 1.0f}, 0);
-
-        Point3f l = new Point3f(2.0f, 1.0f, 1.0f);
-        l.normalize();
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{l.x, l.y, l.z, 0.0f}, 0);
 
         MaterialDef.Full.use(gl);
         gl.glColorMaterial(glFace, GL.GL_DIFFUSE);
@@ -149,7 +146,7 @@ public class GLRenderer implements GLEventListener {
         }
 
         //
-        // Models
+        // Textures
         //
         URL url;
         String filenames[] = new String[]{
@@ -169,6 +166,14 @@ public class GLRenderer implements GLEventListener {
             texture = TextureLoader.getInstance().load(url);
             texture.setTexParameteri(GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
             texture.setTexParameteri(GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+        }
+        if (gl.isExtensionAvailable("GL_EXT_texture_filter_anisotropic")) {
+            float max[] = new float[1];
+            gl.glGetFloatv(GL.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, max, 0);
+
+            gl.glTexParameterf(GL.GL_TEXTURE_2D,
+                    GL.GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                    max[0]);
         }
 
         //
@@ -203,21 +208,19 @@ public class GLRenderer implements GLEventListener {
             SphereModelGenerator.BasePolyhedron base =
                     SphereModelGenerator.BasePolyhedron.OCTAHEDRON;
             ModelBuilder builder = new ModelBuilder();
-            if (i%2 == 0) {
-                Log.log("s");
+            if (i % 2 == 0) {
                 builder.addDecorators(
                         new VertexBasedColorDecorator(),
                         new NormalBasedTextureDecorator());
-                s[i] = SphereModelGenerator.instance()
-                        .createSphere(SPHERE_RADIUS, 5, builder, base);
+                s[i] =
+                        SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 5, builder, base);
                 // TODO(mgagyi): This should be done by decorators in ModelBuilder
                 //s[i].setTexture(texture);
             } else {
                 builder.addDecorators(
-                        new VertexBasedColorDecorator());
-                s[i] = BoxModelGenerator.instance()
-                        .createBox(builder, SPHERE_RADIUS, SPHERE_RADIUS,
-                            SPHERE_RADIUS);
+                        new NormalBasedColorDecorator());
+                s[i] = BoxModelGenerator.instance().createBox(builder, SPHERE_RADIUS, SPHERE_RADIUS,
+                        SPHERE_RADIUS);
                 //s[i].setTexture(texture);
             }
 
@@ -230,7 +233,7 @@ public class GLRenderer implements GLEventListener {
         //
         SimpleConfig e1c = new SimpleConfig();
         e1c.count = 100;
-        e1c.gravity = new Point3f(0, -0.10f, 0);
+        e1c.gravity = new Point3f(0, -1.00f, 0);
         e1c.invResistance = 0.999999f;
         e1c.boundingBox = 21.0f;
         e1c.boundingBoxBounce = 0.99f;
@@ -251,8 +254,7 @@ public class GLRenderer implements GLEventListener {
         // Ground
         Model box = BoxModelGenerator.instance().createBox(
                 new ModelBuilder().addDecorators(
-                    new NormalBasedColorDecorator(),
-                    new VertexBasedTextureDecorator(5f, 5f)),
+                new StaticColorDecorator(0.85f, 0.85f, 0.85f)),
                 100f, 10f, 100f);
         box.setTexture(texture);
         box.setShader(shader);
@@ -275,7 +277,7 @@ public class GLRenderer implements GLEventListener {
 
             {
                 CollisionShape shape;
-                if(i%2 ==0) {
+                if (i % 2 == 0) {
                     shape = new SphereShape(SPHERE_RADIUS);
                 } else {
                     shape = new BoxShape(new Vector3f(
@@ -338,14 +340,14 @@ public class GLRenderer implements GLEventListener {
             dt = 0.2f;
         }
 
-        if(t0 % 400 > t1 % 400) {
+        if (t0 % 900 > t1 % 900) {
             b1.applyTorqueImpulse(new Vector3f(
-                    (float)(Math.random() * 2000 - 1000),
-                    (float)(Math.random() * 500 - 250),
-                    (float)(Math.random() * 2000 - 1000)));
+                    (float) (Math.random() * 3000 - 1500),
+                    (float) (Math.random() * 1000 - 500),
+                    (float) (Math.random() * 3000 - 1500)));
         }
-        
-        bulletWorld.stepSimulation(dt*2.0f, (int)(60/5*2.0f));
+
+        bulletWorld.stepSimulation(dt * 2.0f, (int) (60 / 5 * 2.0f));
 
         GenericSceneNode target = so[(int) (t1 / 8000 % 2)];
         camera.setTarget(target.attribute(PhysicsAttribute.class).origin());
@@ -364,7 +366,7 @@ public class GLRenderer implements GLEventListener {
         }
 
         r += (dt * 5);
-     
+
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
         scene.frame(gl, dt);

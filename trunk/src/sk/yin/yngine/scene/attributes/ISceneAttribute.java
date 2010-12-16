@@ -1,4 +1,4 @@
-package sk.yin.yngine.scene;
+package sk.yin.yngine.scene.attributes;
 
 import javax.media.opengl.GL;
 

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
-import sk.yin.yngine.util.Log;
 
 /**
  * Represents a mesh model. Every face verticle has associated table indexes of
@@ -22,8 +21,6 @@ public class Model {
     private int[] faces;
     private ShaderProgram shader;
     private Texture texture;
-    private boolean zCorrectCoord;
-    private float rf;
 
     public Model() {
         vertices = new float[]{};

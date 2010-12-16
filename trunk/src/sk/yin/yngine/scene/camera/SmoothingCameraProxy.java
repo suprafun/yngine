@@ -1,8 +1,7 @@
-package sk.yin.yngine.scene;
+package sk.yin.yngine.scene.camera;
 
 import javax.media.opengl.GL;
 import javax.vecmath.Vector3f;
-import sk.yin.yngine.util.Log;
 
 /**
  * Smooths changes to transformation of another underlaying camera object.
@@ -11,7 +10,6 @@ import sk.yin.yngine.util.Log;
  */
 public class SmoothingCameraProxy extends LookAtCamera {
     private LookAtCamera camera;
-
 
     public SmoothingCameraProxy(LookAtCamera camera) {
         this.camera = camera;
@@ -28,8 +26,9 @@ public class SmoothingCameraProxy extends LookAtCamera {
     }
 
     protected Vector3f c(Vector3f current, Vector3f target, float deltaTime) {
-        if (current.equals(target))
-            return target;
+        if (current.equals(target)) {
+            return current;
+        }
 
         Vector3f ret = new Vector3f(target);
         ret.sub(current);

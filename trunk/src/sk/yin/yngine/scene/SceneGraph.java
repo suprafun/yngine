@@ -1,5 +1,7 @@
 package sk.yin.yngine.scene;
 
+import sk.yin.yngine.scene.camera.LookAtCamera;
+import sk.yin.yngine.scene.attributes.ISceneAttribute;
 import javax.media.opengl.GL;
 
 /**

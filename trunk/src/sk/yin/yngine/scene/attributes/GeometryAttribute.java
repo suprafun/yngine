@@ -1,4 +1,4 @@
-package sk.yin.yngine.scene;
+package sk.yin.yngine.scene.attributes;
 
 import javax.media.opengl.GL;
 import sk.yin.yngine.math.Model;
@@ -22,7 +22,8 @@ public class GeometryAttribute implements IGeometryAttribute {
     public void render(GL gl, RenderStage stage) {
         if(model != null && stage == RenderStage.RENDER) {
             model.render(gl);
-        } else if (model != null && stage == RenderStage.RENDER_NORMALS) {
+        } else if (false && model != null && stage == RenderStage.RENDER_NORMALS) {
+            // TODO(yin): Separate scenegraph, models and rederer.
             model.renderNormals(gl);
         }
     }

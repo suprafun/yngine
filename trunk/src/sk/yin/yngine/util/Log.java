@@ -1,16 +1,17 @@
 package sk.yin.yngine.util;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 
 /**
  * Basic logging interface for Yngine code.
- * @author yin
+ * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
 public class Log {
     private static Log instance;
+    private boolean enabled;
 
     private Log() {
+        enabled = true;
     }
 
     /**
@@ -22,6 +23,14 @@ public class Log {
             instance = new Log();
         }
         return instance;
+    }
+
+    public void enable() {
+        this.enabled = true;
+    }
+
+    public void disable() {
+        this.enabled = false;
     }
 
     // TODO(mgagyi): What about log(Object[] objs...) syntax?
@@ -59,8 +68,10 @@ public class Log {
      * @param exception
      */
     public void msg(String message, Exception exception) {
-        String time = getTime();
-        System.err.println(time + ": " + message + ": " + exception.getClass().getName() + ": " + exception.getMessage());
+        if (enabled) {
+            String time = getTime();
+            System.err.println(time + ": " + message + ": " + exception.getClass().getName() + ": " + exception.getMessage());
+        }
     }
 
     protected String getTime() {
