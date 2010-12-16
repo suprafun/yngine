@@ -1,10 +1,10 @@
-package sk.yin.yngine.scene;
+package sk.yin.yngine.scene.attributes;
 
 import com.bulletphysics.linearmath.Transform;
 import javax.media.opengl.GL;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Vector3f;
-import sk.yin.yngine.scene.ISceneAttribute.RenderStage;
+import sk.yin.yngine.scene.attributes.ISceneAttribute.RenderStage;
 import sk.yin.yngine.util.Log;
 
 /**

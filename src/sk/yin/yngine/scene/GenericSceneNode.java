@@ -1,10 +1,13 @@
 package sk.yin.yngine.scene;
 
+import sk.yin.yngine.scene.attributes.IGeometryAttribute;
+import sk.yin.yngine.scene.attributes.ITransformAttribute;
+import sk.yin.yngine.scene.attributes.ISceneAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.GL;
 
-import sk.yin.yngine.scene.ISceneAttribute.RenderStage;
+import sk.yin.yngine.scene.attributes.ISceneAttribute.RenderStage;
 
 /**
  * A node in scene graph, which can have multiple attributes specified. It will
@@ -26,7 +29,6 @@ public class GenericSceneNode implements ISceneNode {
 
     public void render(GL gl) {
         for(RenderStage stage : RenderStage.values()) {
-            // NOTE(mgagyi): Check if this is only modern JavaScript sickness ;)
             for (ISceneAttribute attr : attributes) {
                 attr.render(gl, stage);
             }

@@ -1,4 +1,4 @@
-package sk.yin.yngine.scene;
+package sk.yin.yngine.scene.attributes;
 
 /**
  * Associates a model with scene object.

@@ -1,9 +1,9 @@
-package sk.yin.yngine.scene;
+package sk.yin.yngine.scene.camera;
 
+import sk.yin.yngine.scene.attributes.ISceneAttribute;
 import javax.media.opengl.GL;
 import javax.media.opengl.glu.GLU;
 import javax.vecmath.Vector3f;
-import sk.yin.yngine.util.Log;
 
 /**
  * Simple LookAtCamera implementation.
