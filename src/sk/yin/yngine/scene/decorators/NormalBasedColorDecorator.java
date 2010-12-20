@@ -38,7 +38,10 @@ public class NormalBasedColorDecorator extends BaseDecorator {
     @Override
     public void onNewNormal(int idx, Point3f normal) {
         if (builder != null) {
-            int i = builder.addColor(normal);
+            int i = builder.addColor(new Point3f(
+                    Math.abs(normal.x),
+                    Math.abs(normal.y),
+                    Math.abs(normal.z)));
             map.put(idx, i);
         }
     }

@@ -1,5 +1,6 @@
 package sk.yin.yngine.scene;
 
+import sk.yin.yngine.render.lights.GLLightRepository;
 import javax.media.opengl.GL;
 import javax.vecmath.Vector3f;
 import sk.yin.yngine.scene.attributes.ISceneAttribute;
@@ -10,19 +11,35 @@ import sk.yin.yngine.scene.attributes.ISceneAttribute;
  */
 public class DirectionalLightNode implements ILightNode {
     public Vector3f direction = new Vector3f();
-    public float ambient[] = new float[] {1.0f, 1.0f, 1.0f, 1.0f},
-            diffuse[] = new float[] {1.0f, 1.0f, 1.0f, 1.0f},
-            specular[] = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
+    public float ambient[], diffuse[], specular[];
+    private int glLight = -1;
 
     public void activateLight(GL gl, int glLight) {
         if (isGLLight(glLight)) {
             gl.glEnable(glLight);
 
-            gl.glLightfv(glLight, GL.GL_AMBIENT, ambient, 0);
-            gl.glLightfv(glLight, GL.GL_DIFFUSE, diffuse, 0);
-            gl.glLightfv(glLight, GL.GL_SPECULAR, specular, 0);
-            gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{
-                direction.x, direction.y, direction.z, 0.0f}, 0);
+            if (ambient != null) {
+                gl.glLightfv(glLight, GL.GL_AMBIENT, ambient, 0);
+            } else {
+                gl.glLightfv(glLight, GL.GL_AMBIENT, new float[]{0f, 0f, 0f, 0f}, 0);
+            }
+            if (diffuse != null) {
+                gl.glLightfv(glLight, GL.GL_DIFFUSE, diffuse, 0);
+            } else {
+                gl.glLightfv(glLight, GL.GL_DIFFUSE, new float[]{0f, 0f, 0f, 0f}, 0);
+            }
+            if (specular != null) {
+                gl.glLightfv(glLight, GL.GL_SPECULAR, specular, 0);
+            } else {
+                gl.glLightfv(glLight, GL.GL_SPECULAR, new float[]{0f, 0f, 0f, 0f}, 0);
+            }
+            if (direction != null) {
+                gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{
+                            direction.x, direction.y, direction.z, 0.0f}, 0);
+            } else {
+                gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{
+                            0, 1, 0, 0.0f}, 0);
+            }
 
         }
     }
@@ -40,7 +57,15 @@ public class DirectionalLightNode implements ILightNode {
     public void update(float deltaTime) {
     }
 
+    // TODO(yin): This has to be moved to renderer.
     public void render(GL gl) {
+        if (glLight == -1) {
+            glLight = GLLightRepository.instance().allocate();
+        }
+        if (glLight != -1) {
+            // TODO(yin): This has to be reversable.
+            activateLight(gl, glLight);
+        }
     }
 
     public void onAdded(SceneGraph graph, ISceneAttribute parent) {
