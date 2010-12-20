@@ -143,7 +143,13 @@ public class Model {
                                             colors[idxc + 2]);
                             }
                             gl.glVertex3fv(vertices, idxv);
-                            gl.glColor4f(1f, 1f, 1f, 0.2f);
+                            gl.glColor4f(1f, 1f, 1f, 0.5f);
+                            if (hasColors && idxc > -1) {
+                                    gl.glColor4f(colors[idxc],
+                                            colors[idxc + 1],
+                                            colors[idxc + 2],
+                                            0.5f);
+                            }
                             // TODO(yin): Cache this if normals will be rendered.
                             gl.glVertex3f(1.5f * normals[idxn] + vertices[idxv],
                                     1.5f * normals[idxn + 1] + vertices[idxv + 1],

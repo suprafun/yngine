@@ -18,7 +18,6 @@ import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
-import javax.media.opengl.DebugGL;
 import sk.yin.yngine.scene.generators.SphereModelGenerator;
 import sk.yin.yngine.math.Model;
 import javax.media.opengl.GL;
@@ -31,8 +30,10 @@ import sk.yin.yngine.resources.ResourceGetter;
 import sk.yin.yngine.particlesystem.ParticleUnit;
 import sk.yin.yngine.particlesystem.SimpleConfig;
 import sk.yin.yngine.particlesystem.SimpleFactory;
+import sk.yin.yngine.render.lights.MaterialDef;
 import sk.yin.yngine.render.shaders.ShaderFactory;
 import sk.yin.yngine.render.shaders.ShaderProgram;
+import sk.yin.yngine.scene.DirectionalLightNode;
 import sk.yin.yngine.scene.io.TextureLoader;
 import sk.yin.yngine.scene.camera.LookAtCamera;
 import sk.yin.yngine.scene.SceneGraph;
@@ -60,57 +61,22 @@ public class GLRenderer implements GLEventListener {
     long t0 = 0, frames = 0;
     private SceneGraph scene;
     private LookAtCamera camera;
-    private static final int glFace = GL.GL_FRONT_AND_BACK;
+    private static final int glFace = GL.GL_FRONT;
     private int steps;
     ShaderProgram shader;
     DynamicsWorld bulletWorld;
     RigidBody groundBody;
     MotionState motionState[] = new MotionState[MODEL_NUM];
-    private static final boolean DISABLE_SHADERS = false;
+    private static final boolean DISABLE_SHADERS = true;
     private static final boolean DISABLE_LIGHTING = false;
     private static final float SPHERE_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
     private RigidBody b1;
-
-    private enum MaterialDef {
-        Copper(0.3f, 0.7f, 0.6f, 6.0f, 1.8f, 228, 123, 87),
-        Rubber(0.3f, 0.7f, 0.0f, 0.0f, 1.00f, 3, 139, 251),
-        Brass(0.3f, 0.7f, 0.7f, 8.00f, 2.0f, 228, 187, 34),
-        Glass(0.3f, 0.7f, 0.7f, 32.00f, 1.0f, 199, 227, 208),
-        Plastic(0.3f, 0.9f, 0.9f, 32.0f, 1.0f, 0, 19, 252),
-        Pearl(1.5f, -0.5f, 2.0f, 99.0f, 1.0f, 255, 138, 138),
-        Full(0.4f, 0.7f, 0.7f, 32.0f, 1.0f, 255, 255, 255),
-        Half(0.2f, 0.4f, 0.4f, 16.0f, 1.0f, 255, 255, 255);
-        public final float ambient[], diffuse[], specular[], shininess, briliance, c[];
-
-        MaterialDef(float ambient, float diffuse, float specular, float shinines,
-                float brilliance, int r, int g, int b) {
-            float rf = (float) r / 255f,
-                    gf = (float) g / 255f,
-                    bf = (float) b / 255f;
-            this.ambient =
-                    new float[]{ambient * rf, ambient * gf, ambient * bf, 1.0f};
-            this.diffuse =
-                    new float[]{diffuse * rf, diffuse * gf, diffuse * bf, 1.0f};
-            this.specular =
-                    new float[]{specular * rf, specular * gf, specular * bf, 1.0f};
-            this.shininess = shinines;
-            this.briliance = brilliance;
-            c =
-                    new float[]{(float) r / 255, (float) g / 255, (float) b / 512, 1.0f};
-        }
-
-        public void use(GL gl) {
-            gl.glMaterialfv(glFace, GL.GL_AMBIENT, ambient, 0);
-            gl.glMaterialfv(glFace, GL.GL_DIFFUSE, diffuse, 0);
-            gl.glMaterialfv(glFace, GL.GL_SPECULAR, specular, 0);
-            gl.glMaterialfv(glFace, GL.GL_SHININESS, new float[]{shininess}, 0);
-        }
-    }
+    private DirectionalLightNode light0;
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
-        drawable.setGL(new DebugGL(drawable.getGL()));
+        //drawable.setGL(new DebugGL(drawable.getGL()));
 
         CollisionConfiguration config = new DefaultCollisionConfiguration();
         SequentialImpulseConstraintSolver solver =
@@ -138,7 +104,7 @@ public class GLRenderer implements GLEventListener {
                 GL.GL_SEPARATE_SPECULAR_COLOR);
 
         MaterialDef.Full.use(gl);
-        gl.glColorMaterial(glFace, GL.GL_DIFFUSE);
+        gl.glColorMaterial(glFace, GL.GL_AMBIENT);
         gl.glEnable(gl.GL_COLOR_MATERIAL);
 
         if (DISABLE_LIGHTING) {
@@ -251,10 +217,18 @@ public class GLRenderer implements GLEventListener {
         scene.setCamera(camera);
         //scene.addChild(new GenericSceneNode(new ParticleUnitAttribute(e1)));
 
+        // Lights
+        light0 = new DirectionalLightNode();
+        light0.ambient = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+        light0.diffuse = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+        light0.specular = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+        light0.setDirection(new Vector3f(0.0f, 1.0f, 0.0f));
+        scene.addChild(light0);
+
         // Ground
         Model box = BoxModelGenerator.instance().createBox(
                 new ModelBuilder().addDecorators(
-                new StaticColorDecorator(0.85f, 0.85f, 0.85f)),
+                new StaticColorDecorator(.7f, .7f, .7f)),
                 100f, 10f, 100f);
         box.setTexture(texture);
         box.setShader(shader);
@@ -299,7 +273,7 @@ public class GLRenderer implements GLEventListener {
                 bulletWorld.addRigidBody(body);
 
                 if (i == 0) {
-                    body.applyCentralImpulse(new Vector3f(300.0f, -150.0f, 10.0f));
+                    //body.applyCentralImpulse(new Vector3f(300.0f, -150.0f, 10.0f));
                 } else {
                     body.applyCentralImpulse(new Vector3f(-200.0f, -100.0f, -20.0f));
                     b1 = body;
@@ -357,15 +331,10 @@ public class GLRenderer implements GLEventListener {
         int interval = 1000;
         if (t0 % interval > t1 % interval) {
             Log.log("fps: " + 1 / dt + " deltaTime: " + dt);
-            if ((++steps % 10) < 5) {
-                MaterialDef.Full.use(gl);
-            } else {
-                MaterialDef.Half.use(gl);
-            }
-
         }
 
-        r += (dt * 5);
+        r += (dt * 1);
+        light0.setDirection(new Vector3f((float)Math.sin(r), 5.0f, (float)Math.cos(r)));
 
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
