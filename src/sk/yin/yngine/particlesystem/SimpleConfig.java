@@ -1,6 +1,6 @@
 package sk.yin.yngine.particlesystem;
 
-import sk.yin.yngine.math.Point3f;
+import sk.yin.yngine.geometry.Point3f;
 
 /**
  * Configuration for minimal 'simple' particle system.

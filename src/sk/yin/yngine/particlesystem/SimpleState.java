@@ -2,7 +2,7 @@ package sk.yin.yngine.particlesystem;
 
 import java.util.HashMap;
 import java.util.Map;
-import sk.yin.yngine.math.Point3f;
+import sk.yin.yngine.geometry.Point3f;
 
 /**
  * Minimal particle system state with gravity and air invResistance.

@@ -1,8 +1,8 @@
 package sk.yin.yngine.scene.generators;
 
-import sk.yin.yngine.math.Model;
-import sk.yin.yngine.math.Triple;
-import sk.yin.yngine.math.Point3f;
+import sk.yin.yngine.geometry.Model;
+import sk.yin.yngine.geometry.Triple;
+import sk.yin.yngine.geometry.Point3f;
 import java.util.ArrayList;
 import java.util.List;
 import javax.vecmath.TexCoord2f;

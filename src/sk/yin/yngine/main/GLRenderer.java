@@ -19,13 +19,13 @@ import com.bulletphysics.linearmath.Transform;
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
 import sk.yin.yngine.scene.generators.SphereModelGenerator;
-import sk.yin.yngine.math.Model;
+import sk.yin.yngine.geometry.Model;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 import javax.vecmath.Vector3f;
-import sk.yin.yngine.math.Point3f;
+import sk.yin.yngine.geometry.Point3f;
 import sk.yin.yngine.resources.ResourceGetter;
 import sk.yin.yngine.particlesystem.ParticleUnit;
 import sk.yin.yngine.particlesystem.SimpleConfig;
@@ -181,7 +181,7 @@ public class GLRenderer implements GLEventListener {
                 s[i] =
                         SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 5, builder, base);
                 // TODO(mgagyi): This should be done by decorators in ModelBuilder
-                //s[i].setTexture(texture);
+                s[i].setTexture(texture);
             } else {
                 builder.addDecorators(
                         new NormalBasedColorDecorator());
@@ -227,7 +227,8 @@ public class GLRenderer implements GLEventListener {
 
         // Ground
         Model box = BoxModelGenerator.instance().createBox(
-                new ModelBuilder().addDecorators(
+                new ModelBuilder()
+                .addDecorators(
                 new StaticColorDecorator(.7f, .7f, .7f)),
                 100f, 10f, 100f);
         box.setTexture(texture);
