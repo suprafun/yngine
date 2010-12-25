@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.TexCoord2f;
-import sk.yin.yngine.math.Point3f;
-import sk.yin.yngine.math.Triple;
+import sk.yin.yngine.geometry.Point3f;
+import sk.yin.yngine.geometry.Triple;
 
 /**
  * Generates texture coordinates by using vertex normals.

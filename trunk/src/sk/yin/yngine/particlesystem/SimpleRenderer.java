@@ -1,7 +1,7 @@
 package sk.yin.yngine.particlesystem;
 
 import javax.media.opengl.GL;
-import sk.yin.yngine.math.Point3f;
+import sk.yin.yngine.geometry.Point3f;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 
 /**

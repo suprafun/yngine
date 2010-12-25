@@ -1,7 +1,7 @@
 package sk.yin.yngine.scene.attributes;
 
 import javax.media.opengl.GL;
-import sk.yin.yngine.math.Model;
+import sk.yin.yngine.geometry.Model;
 
 /**
  * Scene graph attribute for renderable geometry - a mesh Model.

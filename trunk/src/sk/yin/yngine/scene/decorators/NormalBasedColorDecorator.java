@@ -4,8 +4,8 @@ import sk.yin.yngine.scene.decorators.BaseDecorator;
 import java.util.HashMap;
 import java.util.Map;
 import javax.vecmath.Matrix3f;
-import sk.yin.yngine.math.Point3f;
-import sk.yin.yngine.math.Triple;
+import sk.yin.yngine.geometry.Point3f;
+import sk.yin.yngine.geometry.Triple;
 
 /**
  * Generates color by using vertex normals.
