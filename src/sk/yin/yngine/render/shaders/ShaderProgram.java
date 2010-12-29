@@ -1,6 +1,5 @@
 package sk.yin.yngine.render.shaders;
 
-import java.util.Arrays;
 import javax.media.opengl.GL;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -8,7 +7,7 @@ import sk.yin.yngine.util.Log;
 
 /**
  * Represents a shader program objects and holds references to all attaches
- * shader objects. This class also manages.
+ * shader objects. This class also manages global shader disabling/enabling.
  * 
  * @author Matej 'Yin' Gagyi (matej.gagyi@gmail.com)
  */
@@ -35,14 +34,14 @@ public class ShaderProgram {
             Log.log("Destroying shader #" + program);
             unuse(gl);
             for (int i : vertexShaders) {
-                gl.glDetachObjectARB(program, i);
-                gl.glDeleteObjectARB(i);
+                gl.glDetachShader(program, i);
+                gl.glDeleteShader(i);
             }
             for (int i : fragmentShaders) {
-                gl.glDetachObjectARB(program, i);
-                gl.glDeleteObjectARB(i);
+                gl.glDetachShader(program, i);
+                gl.glDeleteShader(i);
             }
-            gl.glDeleteObjectARB(program);
+            gl.glDeleteProgram(program);
             destroyed = true;
         }
     }

@@ -1,6 +1,7 @@
 /**
- * \file Texturing.frag
+ * Texturing for fragment shader.
  */
+
 const int REPLACE  = 0;
 const int MODULATE = 1;
 const int DECAL    = 2;

@@ -19,5 +19,7 @@ void main()
     // Transform the vertex position to eye space
     vertex = vec3(gl_ModelViewMatrix * gl_Vertex);
 
+    gl_FrontColor = gl_Color;
+
     gl_Position = ftransform();
 }
