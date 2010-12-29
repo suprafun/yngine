@@ -61,7 +61,7 @@ public class ShaderProgramBuilder {
                 vs[] = compileSourceList(gl, vertexShaderSources, ShaderType.VERTEX, program),
                 fs[] = compileSourceList(gl, fragmentShaderSources, ShaderType.FRAGMENT, program);
         gl.glLinkProgramARB(program);
-        printBuildInfoLog(gl, program);
+        printBuildInfoLog(gl, program, true);
 
         return new ShaderProgram(program, vs, fs);
     }
@@ -72,25 +72,29 @@ public class ShaderProgramBuilder {
         for (int i = 0, l = sources.size(); i < l; i++) {
             String source = sources.get(i);
             shaders[i] = gl.glCreateShaderObjectARB(type.glShaderTypeARB);
-            gl.glShaderSourceARB(shaders[i], 1, new String[]{source}, null);
-            gl.glCompileShaderARB(shaders[i]);
-            printBuildInfoLog(gl, shaders[i]);
+            gl.glShaderSource(shaders[i], 1, new String[]{source}, null);
+            gl.glCompileShader(shaders[i]);
+            printBuildInfoLog(gl, shaders[i], false);
             if(program != NO_SHADER_PROGRAM)
-                gl.glAttachObjectARB(program, shaders[i]);
+                gl.glAttachShader(program, shaders[i]);
         }
         return shaders;
     }
 
-    protected void printBuildInfoLog(GL gl, int obj) {
+    protected void printBuildInfoLog(GL gl, int obj, boolean program) {
         IntBuffer l = IntBuffer.allocate(1),
                 n = IntBuffer.allocate(1);
         int len = 0;
 
-        gl.glGetObjectParameterivARB(obj, GL.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
+        gl.glGetProgramiv(obj, GL.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
         len = l.get(0);
         if (len > 0) {
             ByteBuffer log = ByteBuffer.allocate(len);
-            gl.glGetInfoLogARB(obj, len, n, log);
+            if(program) {
+                gl.glGetProgramInfoLog(obj, len, n, log);
+            } else {
+                gl.glGetProgramInfoLog(obj, len, n, log);
+            }
 
             byte[] ary = new byte[log.remaining()];
             log.get(ary);

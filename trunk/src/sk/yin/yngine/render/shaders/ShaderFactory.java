@@ -35,6 +35,23 @@ public class ShaderFactory {
     }
 
     /**
+     * Creates, compiles and links the "library" shader program.
+     * @param gl GL instance
+     * @return ShaderProgram instance.
+     */
+    public ShaderProgram createLib(GL gl) {
+        URL vertexUrl[] = new URL[]{
+            ResourceGetter.getResource(LIB_VERT)
+        };
+        URL fragmentUrl[] = new URL[] {
+            ResourceGetter.getResource(LIB_FRAG),
+            ResourceGetter.getResource(LIB_FRAG_LIGHT),
+            ResourceGetter.getResource(LIB_FRAG_TEX)
+        };
+        return createShaderProgram(gl, vertexUrl, fragmentUrl);
+    }
+
+    /**
      * Creates, compiles and links the "default" shader program.
      * @param gl OpenGL context
      * @return ShaderProgram instance
@@ -47,18 +64,14 @@ public class ShaderFactory {
         return createShaderProgram(gl, vertexUrl, fragmentUrl);
     }
 
-    public ShaderProgram createLib(GL gl) {
-        URL vertexUrl[] = new URL[]{
-            ResourceGetter.getResource(LIB_VERT)
-        };
-        URL fragmentUrl[] = new URL[]{
-            ResourceGetter.getResource(LIB_FRAG),
-            ResourceGetter.getResource(LIB_FRAG_LIGHT),
-            ResourceGetter.getResource(LIB_FRAG_TEX)
-        };
-        return createShaderProgram(gl, vertexUrl, fragmentUrl);
-    }
-
+    /**
+     * Creates, compiles and links shader program given by <code>vertexSources
+     * </code> and fragmentSources.
+     * @param gl                GL instance.
+     * @param vertexSources     Array of URLs of vertex program.
+     * @param fragmentSources   Array of URLs of fragment program.
+     * @return ShaderProgram instance
+     */
     public ShaderProgram createShaderProgram(GL gl, URL[] vertexSources,
             URL[] fragmentSources) {
         ShaderProgramBuilder shaderBuilder = new ShaderProgramBuilder();

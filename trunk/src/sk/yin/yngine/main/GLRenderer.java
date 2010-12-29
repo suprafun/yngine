@@ -67,7 +67,7 @@ public class GLRenderer implements GLEventListener {
     DynamicsWorld bulletWorld;
     RigidBody groundBody;
     MotionState motionState[] = new MotionState[MODEL_NUM];
-    private static final boolean DISABLE_SHADERS = true;
+    private static final boolean DISABLE_SHADERS = false;
     private static final boolean DISABLE_LIGHTING = false;
     private static final float SPHERE_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
@@ -148,7 +148,7 @@ public class GLRenderer implements GLEventListener {
         if (DISABLE_SHADERS) {
             ShaderProgram.disableShaders(gl);
         }
-        shader = ShaderFactory.getInstance().createShaderProgram(gl);
+        shader = ShaderFactory.getInstance().createLib(gl);
 
         //
         // Ground
