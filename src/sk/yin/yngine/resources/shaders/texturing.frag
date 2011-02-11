@@ -1,7 +1,7 @@
 /**
  * Texturing for fragment shader.
  */
-
+/*
 const int REPLACE  = 0;
 const int MODULATE = 1;
 const int DECAL    = 2;
@@ -9,10 +9,10 @@ const int BLEND    = 3;
 const int ADD      = 4;
 const int COMBINE  = 5;
 
-void applyTexture2D(in sampler2D texUnit, in int type, in int index, inout vec4 color)
+void applyTexture2D(in sampler2D texUnit, in int type, in int texCoord, inout vec4 color)
 {
     // Read from the texture
-    vec4 texture = texture2D(texUnit, gl_TexCoord[index].st);
+    vec4 texture = texture2D(texUnit, gl_TexCoord[0].st);
 
     if (type == REPLACE)
     {
@@ -46,3 +46,4 @@ void applyTexture2D(in sampler2D texUnit, in int type, in int index, inout vec4 
         color = clamp(texture * color, 0.0, 1.0);
     }
 }
+*/

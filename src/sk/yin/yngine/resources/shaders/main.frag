@@ -14,6 +14,7 @@ uniform int TexturingType;
 
 void main()
 {
+    vec4 color = gl_Color;
     // Normalize the normal. A varying variable CANNOT
     // be modified by a fragment shader. So a new variable
     // needs to be created.
@@ -27,21 +28,19 @@ void main()
     // to denote the number of lights. A better option may be passing
     // in the number of lights as a uniform or replacing the current
     // value with a smaller value.
-//    calculateLighting(gl_MaxLights, n, vertex, gl_FrontMaterial.shininess,
-//                      ambient, diffuse, specular);
+    calculateLighting(gl_MaxLights, n, vertex, gl_FrontMaterial.shininess,
+                      ambient, diffuse, specular);
 
-//    vec4 color = gl_FrontLightModelProduct.sceneColor  +
-//                 (ambient  * gl_FrontMaterial.ambient) +
-//                 (diffuse  * gl_FrontMaterial.diffuse) +
-//                 (specular * gl_FrontMaterial.specular);
+    color = gl_FrontLightModelProduct.sceneColor  +
+                 (ambient  * gl_FrontMaterial.ambient) +
+                 (diffuse  * gl_FrontMaterial.diffuse) +
+                 (specular * gl_FrontMaterial.specular);
 
-//    color = clamp(color, 0.0, 1.0);
+    color = clamp(color, 0.0, 1.0);
 
 //    gl_FragColor = color;
 
-    vec4 color = gl_Color;
-    applyTexture2D(TexUnit0, TexturingType, 0, color);
+//    applyTexture2D(TexUnit0, TexturingType, 0, color);
     gl_FragColor = color;
-
 }
 

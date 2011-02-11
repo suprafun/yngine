@@ -18,15 +18,17 @@ public class ShaderProgram {
     private int program;
     private final int[] vertexShaders;
     private final int[] fragmentShaders;
+    private final String origin;
     private boolean destroyed;
 
-    ShaderProgram(int program, int[] vertexShaders, int[] fragmentShaders) {
+    ShaderProgram(int program, int[] vertexShaders, int[] fragmentShaders, String origin) {
         Log.log("Created shader #" + program
                 + "(v: " + join(vertexShaders)
                 + "; f: " + join(fragmentShaders) + ")");
         this.program = program;
         this.vertexShaders = vertexShaders;
         this.fragmentShaders = fragmentShaders;
+        this.origin = origin;
     }
 
     public void destroy(GL gl) {
@@ -75,5 +77,10 @@ public class ShaderProgram {
     // TODO(mgagyi): Move to approproate utility class.
     private static String join(int[] ary) {
         return StringUtils.join(ArrayUtils.toObject(ary));
+    }
+
+    @Override
+    public String toString() {
+        return origin;
     }
 }
