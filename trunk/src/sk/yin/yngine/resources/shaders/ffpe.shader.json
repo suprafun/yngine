@@ -1,0 +1,11 @@
+{
+    "version":  "0.1",
+    "display":  "Full Fixes Pipeline Emulation",
+    "author": "yin (matej.gagyi@gmail.com)",
+    "deps": [
+        "main.vert",
+        "main.frag",
+        "texturing.frag",
+        "phong_lighting.frag"
+    ]
+}

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
+import sk.yin.yngine.util.Log;
 
 /**
  * Represents a mesh model. Every face verticle has associated table indexes of
@@ -194,5 +195,15 @@ public class Model {
                 + (normals != null ? 3 : 0)
                 + (colors != null ? 3 : 0)
                 + (texCoords != null ? 3 : 0);
+    }
+
+    @Override
+    public String toString() {
+        return "Model(Fn="+(faces.length/getFaceLen())
+                + ",Vn="+(vertices.length/3)
+                + (colors != null    ? ",Cn="+(colors.length/3)     : "")
+                + (texCoords != null ? ",TCn="+(texCoords.length/3) : "")
+                + (texture != null   ? ",T0=#"+texture.getTarget()  : "")
+                + (shader != null    ? ",S="+shader.toString()      : "") + ")";
     }
 }

@@ -54,6 +54,7 @@ import sk.yin.yngine.util.Log;
  * Event loop hooks. Based on Brian Paul's and others code.
  */
 public class GLRenderer implements GLEventListener {
+
     private static final int MODEL_NUM = 2;
     Model s[] = new Model[MODEL_NUM];
     GenericSceneNode so[] = new GenericSceneNode[MODEL_NUM];
@@ -69,7 +70,7 @@ public class GLRenderer implements GLEventListener {
     MotionState motionState[] = new MotionState[MODEL_NUM];
     private static final boolean DISABLE_SHADERS = false;
     private static final boolean DISABLE_LIGHTING = false;
-    private static final float SPHERE_RADIUS = 13.0f;
+    private static final float DEFUALT_OBJECT_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
     private RigidBody b1;
     private DirectionalLightNode light0;
@@ -148,8 +149,8 @@ public class GLRenderer implements GLEventListener {
         if (DISABLE_SHADERS) {
             ShaderProgram.disableShaders(gl);
         }
-        shader = ShaderFactory.getInstance().createLib(gl);
-
+        shader = ShaderFactory.getInstance().loadShader(gl, "ffpe");
+        Log.log("Shader to use in scene: " + shader.toString());
         //
         // Ground
         //
@@ -179,18 +180,18 @@ public class GLRenderer implements GLEventListener {
                         new VertexBasedColorDecorator(),
                         new NormalBasedTextureDecorator());
                 s[i] =
-                        SphereModelGenerator.instance().createSphere(SPHERE_RADIUS, 5, builder, base);
+                        SphereModelGenerator.instance().createSphere(DEFUALT_OBJECT_RADIUS, 5, builder, base);
                 // TODO(mgagyi): This should be done by decorators in ModelBuilder
                 s[i].setTexture(texture);
             } else {
                 builder.addDecorators(
                         new NormalBasedColorDecorator());
-                s[i] = BoxModelGenerator.instance().createBox(builder, SPHERE_RADIUS, SPHERE_RADIUS,
-                        SPHERE_RADIUS);
+                s[i] = BoxModelGenerator.instance().createBox(builder, DEFUALT_OBJECT_RADIUS, DEFUALT_OBJECT_RADIUS,
+                        DEFUALT_OBJECT_RADIUS);
                 //s[i].setTexture(texture);
             }
-
             s[i].setShader(shader);
+            Log.log("SceneModel #" + i + ": " + s[i].toString());
         }
         r = 0;
 
@@ -227,8 +228,7 @@ public class GLRenderer implements GLEventListener {
 
         // Ground
         Model box = BoxModelGenerator.instance().createBox(
-                new ModelBuilder()
-                .addDecorators(
+                new ModelBuilder().addDecorators(
                 new StaticColorDecorator(.7f, .7f, .7f)),
                 100f, 10f, 100f);
         box.setTexture(texture);
@@ -253,12 +253,12 @@ public class GLRenderer implements GLEventListener {
             {
                 CollisionShape shape;
                 if (i % 2 == 0) {
-                    shape = new SphereShape(SPHERE_RADIUS);
+                    shape = new SphereShape(DEFUALT_OBJECT_RADIUS);
                 } else {
                     shape = new BoxShape(new Vector3f(
-                            SPHERE_RADIUS - 0.04f,
-                            SPHERE_RADIUS - 0.04f,
-                            SPHERE_RADIUS - 0.04f));
+                            DEFUALT_OBJECT_RADIUS - 0.04f,
+                            DEFUALT_OBJECT_RADIUS - 0.04f,
+                            DEFUALT_OBJECT_RADIUS - 0.04f));
                 }
                 Transform transform = new Transform();
                 transform.origin.set(new Vector3f(x, 0.0f, 0.0f));
@@ -335,7 +335,7 @@ public class GLRenderer implements GLEventListener {
         }
 
         r += (dt * 1);
-        light0.setDirection(new Vector3f((float)Math.sin(r), 5.0f, (float)Math.cos(r)));
+        light0.setDirection(new Vector3f((float) Math.sin(r), 5.0f, (float) Math.cos(r)));
 
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
