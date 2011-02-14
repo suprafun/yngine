@@ -9,7 +9,7 @@ const int BLEND    = 3;
 const int ADD      = 4;
 const int COMBINE  = 5;
 
-void applyTexture2D(in sampler2D texUnit, in int type, in int texCoord, inout vec4 color)
+void applyTexture2D(in sampler2D texUnit, in int type, inout vec4 color)
 {
     // Read from the texture
     vec4 texture = texture2D(texUnit, gl_TexCoord[0].st);

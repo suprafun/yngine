@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
-import sk.yin.yngine.util.Log;
+import sk.yin.yngine.render.shaders.ShaderProgram.ShaderProgramInterface;
 
 /**
  * Represents a mesh model. Every face verticle has associated table indexes of
@@ -47,18 +47,21 @@ public class Model {
         boolean hasColors = colors != null;
         boolean hasTexCoords = texCoords != null;
         int flen = getFaceLen();
+        ShaderProgramInterface iface = null;
+
+        if (shader != null) {
+            iface = shader.use(gl);
+        } else {
+            ShaderProgram.unuseCurrent(gl);
+        }
 
         if (texture != null && hasTexCoords) {
             texture.enable();
             texture.bind();
+            if(iface != null)
+                iface.setUniform(gl, "texUnit0", texture.getTextureObject());
         } else {
             gl.glDisable(GL.GL_TEXTURE_2D);
-        }
-
-        if (shader != null) {
-            shader.use(gl);
-        } else {
-            ShaderProgram.unuseCurrent(gl);
         }
 
         if (!hasNormals) {

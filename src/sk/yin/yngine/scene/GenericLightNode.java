@@ -3,18 +3,41 @@ package sk.yin.yngine.scene;
 import sk.yin.yngine.render.lights.GLLightRepository;
 import javax.media.opengl.GL;
 import javax.vecmath.Vector3f;
+import sk.yin.yngine.render.shaders.ShaderProgram;
 import sk.yin.yngine.scene.attributes.ISceneAttribute;
 
 /**
  * Directional light.
  * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
-public class DirectionalLightNode implements ILightNode {
-    public Vector3f direction = new Vector3f();
+public class GenericLightNode implements ILightNode {
+
+    public Vector3f position = new Vector3f(),
+            direction = new Vector3f();
     public float ambient[], diffuse[], specular[];
     private int glLight = -1;
+    private LightType type = LightType.Point;
 
-    public void activateLight(GL gl, int glLight) {
+    public GenericLightNode(){
+    }
+
+    public GenericLightNode(LightType type) {
+        this.type = type;
+    }
+
+    public enum LightType {
+
+        Directional(0.0f),
+        Point(1.0f),
+        Spot(1.0f);
+        public float w;
+
+        LightType(float w) {
+            this.w = w;
+        }
+    }
+
+    public void turnOn(GL gl, int glLight) {
         if (isGLLight(glLight)) {
             gl.glEnable(glLight);
 
@@ -33,18 +56,28 @@ public class DirectionalLightNode implements ILightNode {
             } else {
                 gl.glLightfv(glLight, GL.GL_SPECULAR, new float[]{0f, 0f, 0f, 0f}, 0);
             }
-            if (direction != null) {
-                gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{
-                            direction.x, direction.y, direction.z, 0.0f}, 0);
-            } else {
-                gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{
-                            0, 1, 0, 0.0f}, 0);
-            }
 
+            switch (type) {
+                case Directional:
+                    gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{
+                                direction.x, direction.y, direction.z, type.w}, 0);
+                    break;
+                case Spot:
+                    gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPOT_DIRECTION, new float[]{
+                                direction.x, direction.y, direction.z}, 0);
+                    gl.glLightf(GL.GL_LIGHT0, GL.GL_SPOT_DIRECTION, 0);
+
+                case Point:
+                    gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, new float[]{
+                                direction.x, direction.y, direction.z, type.w}, 0);
+                    break;
+                default:
+
+            }
         }
     }
 
-    public void deactivateLight(GL gl, int glLight) {
+    public void turnOff(GL gl, int glLight) {
         if (isGLLight(glLight)) {
             gl.glDisable(glLight);
         }
@@ -64,8 +97,14 @@ public class DirectionalLightNode implements ILightNode {
         }
         if (glLight != -1) {
             // TODO(yin): This has to be reversable.
-            activateLight(gl, glLight);
+            turnOn(gl, glLight);
         }
+        gl.glDisable(GL.GL_LIGHTING);
+        ShaderProgram.unuseCurrent(gl);
+        gl.glBegin(GL.GL_POINTS);
+        gl.glVertex3f(direction.x, direction.y, direction.z);
+        gl.glEnd();
+        gl.glEnable(GL.GL_LIGHTING);
     }
 
     public void onAdded(SceneGraph graph, ISceneAttribute parent) {
@@ -91,15 +130,28 @@ public class DirectionalLightNode implements ILightNode {
         this.direction.normalize();
     }
 
+    public void setPosition(Vector3f position) {
+        this.position.set(position);
+    }
+
     public float[] ambient() {
         return ambient;
+    }
+    public void ambient(float[] ambient) {
+        this.ambient = ambient;
     }
 
     public float[] diffuse() {
         return diffuse;
     }
+    public void diffuse(float[] diffuse) {
+        this.diffuse = diffuse;
+    }
 
     public float[] specular() {
         return specular;
+    }
+    public void specular(float[] specular) {
+        this.specular = specular;
     }
 }

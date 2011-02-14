@@ -114,7 +114,7 @@ public class SimpleGLCanvas extends JFrame {
         capabilities.setHardwareAccelerated(true);
 
         // try to enable 2x anti aliasing - should be supported on most hardware
-        capabilities.setNumSamples(1);
+        capabilities.setNumSamples(2);
         capabilities.setSampleBuffers(false);
 
         capabilities.setDepthBits(32);

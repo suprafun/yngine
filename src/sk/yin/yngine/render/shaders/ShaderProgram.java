@@ -12,6 +12,7 @@ import sk.yin.yngine.util.Log;
  * @author Matej 'Yin' Gagyi (matej.gagyi@gmail.com)
  */
 public class ShaderProgram {
+
     public static final int NO_SHADER_PROGRAM = 0;
     private static int programInUse = NO_SHADER_PROGRAM;
     private static boolean enabled = true;
@@ -19,7 +20,8 @@ public class ShaderProgram {
     private final int[] vertexShaders;
     private final int[] fragmentShaders;
     private final String origin;
-    private boolean destroyed;
+    private boolean destroyed = false;
+    private ShaderProgramInterface iface = null;
 
     ShaderProgram(int program, int[] vertexShaders, int[] fragmentShaders, String origin) {
         Log.log("Created shader #" + program
@@ -48,11 +50,16 @@ public class ShaderProgram {
         }
     }
 
-    public void use(GL gl) {
+    public ShaderProgramInterface use(GL gl) {
         if (enabled && !destroyed) {
             programInUse = program;
-            gl.glUseProgramObjectARB(program);
+            gl.glUseProgram(program);
+
+            if(iface == null)
+                iface = new ShaderProgramInterfaceImpl();
+            return iface;
         }
+        return null;
     }
 
     public void unuse(GL gl) {
@@ -63,7 +70,7 @@ public class ShaderProgram {
 
     public static void unuseCurrent(GL gl) {
         programInUse = NO_SHADER_PROGRAM;
-        gl.glUseProgramObjectARB(programInUse);
+        gl.glUseProgram(programInUse);
     }
 
     public static void enableShaders(GL gl) {
@@ -82,5 +89,29 @@ public class ShaderProgram {
     @Override
     public String toString() {
         return origin;
+    }
+
+    public interface ShaderProgramInterface {
+        public boolean setUniform(GL gl, String name, Object value);
+
+        public boolean setUniform(GL gl, String string, int textureObject);
+    }
+    
+    private class ShaderProgramInterfaceImpl implements ShaderProgramInterface {
+        public boolean setUniform(GL gl, String name, Object value) {
+            if(value instanceof Integer) {
+                return setUniform(gl, name, ((Integer)value).intValue());
+            }
+            return false;
+        }
+
+        public boolean setUniform(GL gl, String name, int value) {
+            int loc = gl.glGetUniformLocation(program, name);
+            if(loc >= 0) {
+                gl.glUniform1i(loc, value);
+                return true;
+            }
+            return false;
+        }
     }
 }
