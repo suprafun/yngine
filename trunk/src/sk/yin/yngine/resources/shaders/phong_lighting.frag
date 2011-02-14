@@ -57,6 +57,7 @@ void pointLight(in int i, in vec3 N, in vec3 V, in float shininess,
 
     float dist = length(D);
     float attenuation = calculateAttenuation(i, dist);
+    float attenSquare = attenuation * attenuation;
 
     float nDotL = dot(N,L);
 
@@ -115,12 +116,14 @@ void calculateLighting(in int numLights, in vec3 N, in vec3 V, in float shinines
     {
         if (isLightEnabled(i))
         {
-            if (gl_LightSource[i].position.w == 0.0)
+            if (gl_LightSource[i].position.w == 0.0) {
                 directionalLight(i, N, shininess, ambient, diffuse, specular);
-            else if (gl_LightSource[i].spotCutoff == 180.0)
+            } else if (gl_LightSource[i].spotCutoff == 180.0
+                    || gl_LightSource[i].spotCutoff == 0.0) {
                 pointLight(i, N, V, shininess, ambient, diffuse, specular);
-            else
+            } else {
                  spotLight(i, N, V, shininess, ambient, diffuse, specular);
+            }
         }
     }
 }

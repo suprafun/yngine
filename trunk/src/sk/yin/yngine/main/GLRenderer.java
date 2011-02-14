@@ -33,7 +33,8 @@ import sk.yin.yngine.particlesystem.SimpleFactory;
 import sk.yin.yngine.render.lights.MaterialDef;
 import sk.yin.yngine.render.shaders.ShaderFactory;
 import sk.yin.yngine.render.shaders.ShaderProgram;
-import sk.yin.yngine.scene.DirectionalLightNode;
+import sk.yin.yngine.scene.GenericLightNode;
+import sk.yin.yngine.scene.GenericLightNode.LightType;
 import sk.yin.yngine.scene.io.TextureLoader;
 import sk.yin.yngine.scene.camera.LookAtCamera;
 import sk.yin.yngine.scene.SceneGraph;
@@ -73,7 +74,7 @@ public class GLRenderer implements GLEventListener {
     private static final float DEFUALT_OBJECT_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
     private RigidBody b1;
-    private DirectionalLightNode light0;
+    private GenericLightNode light0;
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
@@ -156,10 +157,10 @@ public class GLRenderer implements GLEventListener {
         //
         {
             CollisionShape shape =
-                    new BoxShape(new Vector3f(100.0f - 0.04f, 10.0f - 0.04f, 100.0f - 0.04f));
+                    new BoxShape(new Vector3f(100.0f - 0.04f, 1.0f - 0.04f, 100.0f - 0.04f));
 
             Transform transform = new Transform();
-            transform.origin.set(new Vector3f(0.0f, -30.0f, 0.0f));
+            transform.origin.set(new Vector3f(0.0f, -10.0f, 0.0f));
             transform.basis.setIdentity();
             DefaultMotionState motion = new DefaultMotionState(transform);
             RigidBodyConstructionInfo rbInfo =
@@ -219,23 +220,23 @@ public class GLRenderer implements GLEventListener {
         //scene.addChild(new GenericSceneNode(new ParticleUnitAttribute(e1)));
 
         // Lights
-        light0 = new DirectionalLightNode();
-        light0.ambient = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-        light0.diffuse = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-        light0.specular = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-        light0.setDirection(new Vector3f(0.0f, 1.0f, 0.0f));
+        light0 = new GenericLightNode(LightType.Point);
+        light0.ambient(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        light0.diffuse(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        light0.specular(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        light0.setDirection(new Vector3f(0.0f, -1.0f, 0.0f)); // -Letter for cut-off
         scene.addChild(light0);
 
         // Ground
         Model box = BoxModelGenerator.instance().createBox(
                 new ModelBuilder().addDecorators(
                 new StaticColorDecorator(.7f, .7f, .7f)),
-                100f, 10f, 100f);
+                100f, 1f, 100f);
         box.setTexture(texture);
         box.setShader(shader);
         GenericSceneNode node = new GenericSceneNode(
                 new GeometryAttribute(box),
-                new TransformAttribute(new Vector3f(0f, -30f, 0f)));
+                new TransformAttribute(new Vector3f(0f, -10f, 0f)));
         scene.addChild(node);
 
         // Balls
@@ -261,7 +262,7 @@ public class GLRenderer implements GLEventListener {
                             DEFUALT_OBJECT_RADIUS - 0.04f));
                 }
                 Transform transform = new Transform();
-                transform.origin.set(new Vector3f(x, 0.0f, 0.0f));
+                transform.origin.set(new Vector3f(x, 10.0f, 0.0f));
                 motionState[i] = physics;
                 Vector3f localInertia = new Vector3f(0.0f, 0.0f, 0.0f);
                 shape.calculateLocalInertia(SPHERE_MASS, localInertia);
@@ -334,8 +335,8 @@ public class GLRenderer implements GLEventListener {
             Log.log("fps: " + 1 / dt + " deltaTime: " + dt);
         }
 
-        r += (dt * 1);
-        light0.setDirection(new Vector3f((float) Math.sin(r), 5.0f, (float) Math.cos(r)));
+        r += dt/2;
+        light0.setPosition(new Vector3f((float) Math.sin(r)*25, 0.0f, (float) Math.cos(r)*25));
 
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);

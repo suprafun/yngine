@@ -11,6 +11,7 @@ varying vec3 vertex;
 
 // App->Shaders (uniforms)
 //  uniform int texUsed;
+uniform sampler2D TexUnit0;
 
 void main()
 {

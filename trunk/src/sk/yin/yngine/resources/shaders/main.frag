@@ -31,16 +31,17 @@ void main()
     calculateLighting(gl_MaxLights, n, vertex, gl_FrontMaterial.shininess,
                       ambient, diffuse, specular);
 
-    color = gl_FrontLightModelProduct.sceneColor  +
+    vec4 light = gl_FrontLightModelProduct.sceneColor  +
                  (ambient  * gl_FrontMaterial.ambient) +
                  (diffuse  * gl_FrontMaterial.diffuse) +
                  (specular * gl_FrontMaterial.specular);
 
-    color = clamp(color, 0.0, 1.0);
+    light = clamp(light, 0.0, 1.0);
 
 //    gl_FragColor = color;
 
-//    applyTexture2D(TexUnit0, TexturingType, 0, color);
-    gl_FragColor = color;
+    //applyTexture2D(TexUnit0, TexturingType, 0, color);
+    vec4 texture = texture2D(TexUnit0, gl_TexCoord[0].st);
+    gl_FragColor = color * light * texture;
 }
 

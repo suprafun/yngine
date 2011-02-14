@@ -18,6 +18,8 @@ public class GLLightRepository {
     }
 
     private GLLightRepository() {
+        for(int i = 0; i < lights.length; i++)
+            lights[i] = false;
     }
 
     public int allocate() {
