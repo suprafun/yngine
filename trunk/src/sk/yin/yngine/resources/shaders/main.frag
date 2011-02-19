@@ -33,15 +33,16 @@ void main()
 
     vec4 light = gl_FrontLightModelProduct.sceneColor  +
                  (ambient  * gl_FrontMaterial.ambient) +
-                 (diffuse  * gl_FrontMaterial.diffuse) +
-                 (specular * gl_FrontMaterial.specular);
+                 (diffuse  * gl_FrontMaterial.diffuse);
+    vec4 spec = (specular * gl_FrontMaterial.specular);
 
     light = clamp(light, 0.0, 1.0);
+    spec = clamp(spec, 0.0, 1.0);
 
 //    gl_FragColor = color;
 
     //applyTexture2D(TexUnit0, TexturingType, 0, color);
     vec4 texture = texture2D(TexUnit0, gl_TexCoord[0].st);
-    gl_FragColor = color * light * texture;
+    gl_FragColor = color * (light) * texture + spec;
 }
 
