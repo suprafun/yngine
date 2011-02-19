@@ -2,6 +2,7 @@ package sk.yin.yngine.scene.attributes;
 
 import javax.media.opengl.GL;
 import sk.yin.yngine.geometry.Model;
+import sk.yin.yngine.render.lights.MaterialDef;
 
 /**
  * Scene graph attribute for renderable geometry - a mesh Model.
@@ -10,9 +11,11 @@ import sk.yin.yngine.geometry.Model;
  */
 public class GeometryAttribute implements IGeometryAttribute {
     private Model model;
+    private MaterialDef surface;
 
-    public GeometryAttribute(Model model) {
+    public GeometryAttribute(Model model, MaterialDef surface) {
         this.model = model;
+        this.surface = surface;
     }
 
     public void update(float deltaTime) {
@@ -21,6 +24,11 @@ public class GeometryAttribute implements IGeometryAttribute {
 
     public void render(GL gl, RenderStage stage) {
         if(model != null && stage == RenderStage.RENDER) {
+            if(surface != null) {
+                surface.use(gl);
+            } else {
+                MaterialDef.Half.use(gl);
+            }
             model.render(gl);
         } else if (false && model != null && stage == RenderStage.RENDER_NORMALS) {
             // TODO(yin): Separate scenegraph, models and rederer.

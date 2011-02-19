@@ -5,6 +5,9 @@
 const vec4 AMBIENT_BLACK = vec4(0.0, 0.0, 0.0, 1.0);
 const vec4 DEFAULT_BLACK = vec4(0.0, 0.0, 0.0, 0.0);
 
+// App -> Shader
+uniform bool spotEffectShrink = true;
+
 bool isLightEnabled(in int i)
 {
     // A separate variable is used to get
@@ -88,11 +91,15 @@ void spotLight(in int i, in vec3 N, in vec3 V, in float shininess,
 
     if (nDotL > 0.0)
     {
-        float spotEffect = dot(normalize(gl_LightSource[i].spotDirection), -L);
+        float spotEffect = dot(normalize(gl_LightSource[i].spotDirection), -L),
+                cosCutoff = gl_LightSource[i].spotCosCutoff;
 
-        if (spotEffect > gl_LightSource[i].spotCosCutoff)
+        if (spotEffect > cosCutoff)
         {
-            attenuation *=  pow(spotEffect, gl_LightSource[i].spotExponent);
+            if(spotEffectShrink)
+                spotEffect = (spotEffect-cosCutoff)/(1-cosCutoff);
+
+            attenuation *= pow(spotEffect, gl_LightSource[i].spotExponent);
 
             vec3 E = normalize(-V);
             vec3 R = reflect(-L, N);
@@ -114,7 +121,7 @@ void calculateLighting(in int numLights, in vec3 N, in vec3 V, in float shinines
     // its contributions to the color of the pixel.
     for (int i = 0; i < numLights; i++)
     {
-        if (isLightEnabled(i))
+        if (isLightEnabled(i) && (i == 0 || i == 1))
         {
             if (gl_LightSource[i].position.w == 0.0) {
                 directionalLight(i, N, shininess, ambient, diffuse, specular);

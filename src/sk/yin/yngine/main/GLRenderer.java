@@ -53,6 +53,7 @@ import sk.yin.yngine.util.Log;
 
 /**
  * Event loop hooks. Based on Brian Paul's and others code.
+ * @author Matej 'Yin' Gagyi (yinotaurus+yngine.src@gmail.com)
  */
 public class GLRenderer implements GLEventListener {
 
@@ -74,7 +75,7 @@ public class GLRenderer implements GLEventListener {
     private static final float DEFUALT_OBJECT_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
     private RigidBody b1;
-    private GenericLightNode light0;
+    private GenericLightNode light0, light1, light2 = null;
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
@@ -106,7 +107,7 @@ public class GLRenderer implements GLEventListener {
                 GL.GL_SEPARATE_SPECULAR_COLOR);
 
         MaterialDef.Full.use(gl);
-        gl.glColorMaterial(glFace, GL.GL_AMBIENT);
+        gl.glColorMaterial(glFace, GL.GL_AMBIENT_AND_DIFFUSE);
         gl.glEnable(gl.GL_COLOR_MATERIAL);
 
         if (DISABLE_LIGHTING) {
@@ -214,18 +215,29 @@ public class GLRenderer implements GLEventListener {
         camera = new LookAtCamera();
         camera.setPosition(new Vector3f(333f, 250f, 1000f));
         camera = new SmoothingCameraProxy(camera);
-        camera.setPosition(new Vector3f(0, 10f, 80f));
+        camera.setPosition(new Vector3f(0, 50f, 150f));
         scene.addChild(new GenericSceneNode(camera));
         scene.setCamera(camera);
         //scene.addChild(new GenericSceneNode(new ParticleUnitAttribute(e1)));
 
-        // Lights
-        light0 = new GenericLightNode(LightType.Point);
-        light0.ambient(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        light0 = new GenericLightNode(LightType.Spot);
+        light0.ambient(new float[]{0.0f, 0.0f, 0.0f, 1.0f});
         light0.diffuse(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
         light0.specular(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
-        light0.setDirection(new Vector3f(0.0f, -1.0f, 0.0f)); // -Letter for cut-off
+        light0.cutoff(45.3f);
+        light0.stopExp(0.75f);
         scene.addChild(light0);
+
+        // Lights
+        light1 = new GenericLightNode(LightType.Spot);
+        light1.ambient(new float[]{0.1f, 0.1f, 0.1f, 1.0f});
+        light1.diffuse(new float[]{0.5f, 0.5f, 0.5f, 1.0f});
+        light1.specular(new float[]{0.0f, 0.0f, 0.0f, 1.0f});
+        light1.cutoff(45.0f);
+        light1.stopExp(0.33f);
+        light1.position(new Vector3f(0, 100.0f, 0));
+        light1.direction(new Vector3f(0, -1.0f, 0));
+        scene.addChild(light1);
 
         // Ground
         Model box = BoxModelGenerator.instance().createBox(
@@ -235,7 +247,7 @@ public class GLRenderer implements GLEventListener {
         box.setTexture(texture);
         box.setShader(shader);
         GenericSceneNode node = new GenericSceneNode(
-                new GeometryAttribute(box),
+                new GeometryAttribute(box, MaterialDef.Floor),
                 new TransformAttribute(new Vector3f(0f, -10f, 0f)));
         scene.addChild(node);
 
@@ -244,7 +256,7 @@ public class GLRenderer implements GLEventListener {
         float x = -75.0f * (MODEL_NUM - 1),
                 xi = 150.0f;
         for (int i = 0; i < MODEL_NUM; i++, x += xi) {
-            GeometryAttribute geometry = new GeometryAttribute(s[i]);
+            GeometryAttribute geometry = new GeometryAttribute(s[i], MaterialDef.Full);
             PhysicsAttribute physics =
                     new PhysicsAttribute(new Vector3f(x, 20f, 0));
             GenericSceneNode obj = new GenericSceneNode(geometry, physics);
@@ -335,8 +347,18 @@ public class GLRenderer implements GLEventListener {
             Log.log("fps: " + 1 / dt + " deltaTime: " + dt);
         }
 
-        r += dt/2;
-        light0.setPosition(new Vector3f((float) Math.sin(r)*25, 0.0f, (float) Math.cos(r)*25));
+        r += dt;
+
+        double dr = Math.sin(r*1.9),
+                rotSpeed = 0.5,
+                lDist = (Math.cos(r/2.3)+1)/2;
+        lDist = 100 - lDist*lDist * 40;
+        light0.position(new Vector3f(
+                (float) (Math.sin(r*rotSpeed)*lDist),
+                        30.0f,
+                (float) (Math.cos(r*rotSpeed)*lDist))
+        );
+        light0.direction(new Vector3f((float) -Math.sin(r*rotSpeed + dr), -1.55f, (float) -Math.cos(r*rotSpeed + dr)));
 
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
