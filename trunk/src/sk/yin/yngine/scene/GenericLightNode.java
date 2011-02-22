@@ -6,6 +6,8 @@ import javax.vecmath.Vector3f;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import sk.yin.yngine.scene.attributes.ISceneAttribute;
 
+import static  sk.yin.yngine.render.lights.GLLightRepository.isGLLight;
+
 /**
  * General light usable for all GL core lighting models. May be
  * extended for custom lighting models to use with custom shaders.
@@ -98,10 +100,6 @@ public class GenericLightNode implements ILightNode {
             // TODO(yin): Free Allocated GL light[i]
             gl.glDisable(glLight);
         }
-    }
-
-    protected boolean isGLLight(int glLight) {
-        return glLight >= GL.GL_LIGHT0 && glLight <= GL.GL_LIGHT7;
     }
 
     public void update(float deltaTime) {

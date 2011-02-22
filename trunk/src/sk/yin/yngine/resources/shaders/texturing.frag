@@ -1,49 +1,46 @@
 /**
  * Texturing for fragment shader.
  */
-/*
-const int REPLACE  = 0;
-const int MODULATE = 1;
-const int DECAL    = 2;
-const int BLEND    = 3;
-const int ADD      = 4;
-const int COMBINE  = 5;
+const int ENV_REPLACE  = 0;
+const int ENV_MODULATE = 1;
+const int ENV_DECAL    = 2;
+const int ENV_BLEND    = 3;
+const int ENV_ADD      = 4;
+const int ENV_COMBINE  = 5;
 
-void applyTexture2D(in sampler2D texUnit, in int type, inout vec4 color)
-{
-    // Read from the texture
-    vec4 texture = texture2D(texUnit, gl_TexCoord[0].st);
+// App => Shader
+uniform bool clampTextured = false;
 
-    if (type == REPLACE)
-    {
-        color = texture;
-    }
-    else if (type == MODULATE)
-    {
-        color *= texture;
-    }
-    else if (type == DECAL)
-    {
-        vec3 temp = mix(color.rgb, texture.rgb, texture.a);
+/**
+ * Applies texel on fragment color using a texture function, coresponding to
+ * GL texture environments.
+ */
+void applyTexel(inout vec4 color, in vec4 texel, in int texFunc, in int index) {
+    vec4 c = color;
+    if (texFunc == ENV_REPLACE) {
+        color = texel;
 
+    } else if (texFunc == ENV_MODULATE) {
+        color *= texel;
+
+    } else if (texFunc == ENV_DECAL) {
+        vec3 temp = mix(color.rgb, texel.rgb, texel.a);
         color = vec4(temp, color.a);
-    }
-    else if (type == BLEND)
-    {
-        vec3 temp = mix(color.rgb, gl_TextureEnvColor[index].rgb, texture.rgb);
 
-        color = vec4(temp, color.a * texture.a);
-    }
-    else if (type == ADD)
-    {
-        color.rgb += texture.rgb;
-        color.a   *= texture.a;
+    } else if (texFunc == ENV_BLEND) {
+        vec3 env = gl_TextureEnvColor[index].rgb;
+        vec3 temp = mix(color.rgb, env, texel.rgb);
+        color = vec4(temp, color.a * texel.a);
 
-        color = clamp(color, 0.0, 1.0);
-    }
-    else
-    {
-        color = clamp(texture * color, 0.0, 1.0);
+    } else if (texFunc == ENV_ADD) {
+        color.rgb += texel.rgb;
+        color.a   *= texel.a;
+        if(clampTextured)
+            color = clamp(color, 0.0, 1.0);
+
+    } else if (texFunc == ENV_COMBINE) {
+        color = texel * color;
+        if(clampTextured)
+            color = clamp(color, 0.0, 1.0);
     }
 }
-*/

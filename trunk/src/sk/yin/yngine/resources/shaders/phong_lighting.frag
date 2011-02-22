@@ -6,10 +6,10 @@ const vec4 AMBIENT_BLACK = vec4(0.0, 0.0, 0.0, 1.0);
 const vec4 DEFAULT_BLACK = vec4(0.0, 0.0, 0.0, 0.0);
 
 // App -> Shader
-uniform bool spotEffectShrink = true;
+uniform bool spotFadeOff = true;
+uniform bool lightBackFace = false;
 
-bool isLightEnabled(in int i)
-{
+bool isLightEnabled(in int i) {
     // A separate variable is used to get
     // rid of a linker error.
     bool enabled = true;
@@ -25,11 +25,17 @@ bool isLightEnabled(in int i)
     return(enabled);
 }
 
-float calculateAttenuation(in int i, in float dist)
-{
+float calculateAttenuation(in int i, in float dist) {
     return(1.0 / (gl_LightSource[i].constantAttenuation +
                   gl_LightSource[i].linearAttenuation * dist +
                   gl_LightSource[i].quadraticAttenuation * dist * dist));
+}
+
+float dotNL(vec3 N, vec3 L) {
+    float ret = dot(N, L);
+    if(ret < 0.0 && lightBackFace)
+        ret = -ret;
+    return ret;
 }
 
 void directionalLight(in int i, in vec3 N, in float shininess,
@@ -37,7 +43,7 @@ void directionalLight(in int i, in vec3 N, in float shininess,
 {
     vec3 L = normalize(gl_LightSource[i].position.xyz);
 
-    float nDotL = dot(N, L);
+    float nDotL = dotNL(N, L);
 
     if (nDotL > 0.0)
     {
@@ -62,7 +68,7 @@ void pointLight(in int i, in vec3 N, in vec3 V, in float shininess,
     float attenuation = calculateAttenuation(i, dist);
     float attenSquare = attenuation * attenuation;
 
-    float nDotL = dot(N,L);
+    float nDotL = dotNL(N,L);
 
     if (nDotL > 0.0)
     {
@@ -87,17 +93,18 @@ void spotLight(in int i, in vec3 N, in vec3 V, in float shininess,
     float dist = length(D);
     float attenuation = calculateAttenuation(i, dist);
 
-    float nDotL = dot(N,L);
+    float nDotL = dotNL(N,L);
 
-    if (nDotL > 0.0)
-    {
+    ambient  += gl_LightSource[i].ambient * attenuation;
+
+    if (nDotL > 0.0) {
         float spotEffect = dot(normalize(gl_LightSource[i].spotDirection), -L),
                 cosCutoff = gl_LightSource[i].spotCosCutoff;
 
-        if (spotEffect > cosCutoff)
-        {
-            if(spotEffectShrink)
+        if (spotEffect > cosCutoff) {
+            if(spotFadeOff) {
                 spotEffect = (spotEffect-cosCutoff)/(1-cosCutoff);
+            }
 
             attenuation *= pow(spotEffect, gl_LightSource[i].spotExponent);
 
@@ -110,25 +117,23 @@ void spotLight(in int i, in vec3 N, in vec3 V, in float shininess,
             specular += gl_LightSource[i].specular * attenuation * pf;
         }
     }
-
-    ambient  += gl_LightSource[i].ambient * attenuation;
 }
 
 void calculateLighting(in int numLights, in vec3 N, in vec3 V, in float shininess,
-                       inout vec4 ambient, inout vec4 diffuse, inout vec4 specular)
-{
+                       inout vec4 ambient, inout vec4 diffuse, inout vec4 specular) {
     // Just loop through each light, and if its enabled add
     // its contributions to the color of the pixel.
-    for (int i = 0; i < numLights; i++)
-    {
-        if (isLightEnabled(i) && (i == 0 || i == 1))
-        {
+    for (int i = 0; i < numLights; i++) {
+        if (isLightEnabled(i) && (i == 0 || i == 1)) {
             if (gl_LightSource[i].position.w == 0.0) {
                 directionalLight(i, N, shininess, ambient, diffuse, specular);
+
             } else if (gl_LightSource[i].spotCutoff == 180.0
                     || gl_LightSource[i].spotCutoff == 0.0) {
+
                 pointLight(i, N, V, shininess, ambient, diffuse, specular);
             } else {
+
                  spotLight(i, N, V, shininess, ambient, diffuse, specular);
             }
         }

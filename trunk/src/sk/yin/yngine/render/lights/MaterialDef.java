@@ -20,9 +20,9 @@ import sk.yin.yngine.util.Log;
         Plastic(0.3f, 0.9f, 0.9f, 32.0f, 1.0f, 0, 19, 252),
         Pearl(1.5f, -0.5f, 2.0f, 99.0f, 1.0f, 255, 138, 138),
 
-        Floor(0.1f, 0.9f, 0.6f, 150.0f, 1.0f, 200, 225, 255),
-        Full(0.2f, 0.9f, 0.6f, 32.0f, 1.0f, 255, 255, 255),
-        Half(0.3f, 0.6f, 0.4f, 16.0f, 1.0f, 255, 255, 255);
+        Floor(1.0f, 1.0f, 1.0f, 128.0f, 1.0f, 200, 225, 255),
+        Full(1.0f, 1.0f, 1.0f, 32.0f, 1.0f, 255, 255, 255),
+        Half(0.5f, 0.5f, 0.5f, 16.0f, 1.0f, 255, 255, 255);
         public final float ambient[], diffuse[], specular[], shininess, briliance, c[];
         public static final int GL_FACE = GL.GL_FRONT;
 

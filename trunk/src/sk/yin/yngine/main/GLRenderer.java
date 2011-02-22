@@ -153,6 +153,8 @@ public class GLRenderer implements GLEventListener {
         }
         shader = ShaderFactory.getInstance().loadShader(gl, "ffpe");
         Log.log("Shader to use in scene: " + shader.toString());
+        ShaderProgram.ShaderProgramInterface iface = shader.use(gl);
+        iface.setUniform(gl, "spotFadeOff", 1);
         //
         // Ground
         //
@@ -220,20 +222,20 @@ public class GLRenderer implements GLEventListener {
         scene.setCamera(camera);
         //scene.addChild(new GenericSceneNode(new ParticleUnitAttribute(e1)));
 
+        // Lights
         light0 = new GenericLightNode(LightType.Spot);
-        light0.ambient(new float[]{0.0f, 0.0f, 0.0f, 1.0f});
-        light0.diffuse(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        light0.ambient(new float[]{0.1f, 0.1f, 0.1f, 1.0f});
+        light0.diffuse(new float[]{0.8f, 0.8f, 0.8f, 1.0f});
         light0.specular(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
-        light0.cutoff(45.3f);
+        light0.cutoff(60.0f);
         light0.stopExp(0.75f);
         scene.addChild(light0);
 
-        // Lights
         light1 = new GenericLightNode(LightType.Spot);
         light1.ambient(new float[]{0.1f, 0.1f, 0.1f, 1.0f});
-        light1.diffuse(new float[]{0.5f, 0.5f, 0.5f, 1.0f});
-        light1.specular(new float[]{0.0f, 0.0f, 0.0f, 1.0f});
-        light1.cutoff(45.0f);
+        light1.diffuse(new float[]{0.7f, 0.7f, 0.7f, 1.0f});
+        light1.specular(new float[]{0.3f, 0.3f, 0.3f, 1.0f});
+        light1.cutoff(50.0f);
         light1.stopExp(0.33f);
         light1.position(new Vector3f(0, 100.0f, 0));
         light1.direction(new Vector3f(0, -1.0f, 0));
@@ -253,8 +255,8 @@ public class GLRenderer implements GLEventListener {
 
         // Balls
 
-        float x = -75.0f * (MODEL_NUM - 1),
-                xi = 150.0f;
+        float x = -0.0f * (MODEL_NUM - 1),
+                xi = 75.0f;
         for (int i = 0; i < MODEL_NUM; i++, x += xi) {
             GeometryAttribute geometry = new GeometryAttribute(s[i], MaterialDef.Full);
             PhysicsAttribute physics =
