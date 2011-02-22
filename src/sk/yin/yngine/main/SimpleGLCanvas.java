@@ -95,9 +95,19 @@ public class SimpleGLCanvas extends JFrame {
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addComponent(canvas, GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE).addContainerGap()));
+            layout.createParallelGroup(Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(canvas, GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
+                .addContainerGap())
+        );
         layout.setVerticalGroup(
-                layout.createParallelGroup(Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addComponent(canvas, GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE).addContainerGap()));
+            layout.createParallelGroup(Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(canvas, GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -138,7 +148,8 @@ public class SimpleGLCanvas extends JFrame {
                 }
 
                 SimpleGLCanvas frame = new SimpleGLCanvas();
-                frame.setSize(480, 320);
+                frame.setSize(640, 400);
+                frame.setLocationRelativeTo(null);
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setVisible(true);
             }
