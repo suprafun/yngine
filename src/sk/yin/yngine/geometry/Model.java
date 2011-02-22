@@ -1,17 +1,19 @@
 package sk.yin.yngine.geometry;
 
 import com.sun.opengl.util.texture.Texture;
+import sk.yin.yngine.render.textures.PlainVanilaTexture;
 import java.util.ArrayList;
 import java.util.List;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
 import sk.yin.yngine.render.shaders.ShaderProgram.ShaderProgramInterface;
+import sk.yin.yngine.util.Log;
 
 /**
  * Represents a mesh model. Every face verticle has associated table indexes of
  * normals, color, texture coordinates, etc. if they're present the table aren't
  * null.
- * 
+ *
  * @author Matej 'Yin' Gagyi (yinotaurus+yngine-src@gmail.com)
  */
 public class Model {
@@ -21,7 +23,7 @@ public class Model {
     private float[] texCoords;
     private int[] faces;
     private ShaderProgram shader;
-    private Texture texture;
+    private PlainVanilaTexture texture;
 
     public Model() {
         vertices = new float[]{};
@@ -56,11 +58,17 @@ public class Model {
         }
 
         if (texture != null && hasTexCoords) {
-            texture.enable();
-            texture.bind();
-            if(iface != null)
-                iface.setUniform(gl, "texUnit0", texture.getTextureObject());
+            texture.bind(gl);
+            if(iface != null) {
+                Log.log("texture binding: " + texture.texture().getTextureObject() + " | " + texture.texUnit());
+                iface.setUniform(gl, "TexUnit0", 0);
+                iface.setUniform(gl, "texFunc0", 1 /*TEX_MODULATE*/);
+                iface.setUniform(gl, "texEnable0", 1);
+            }
         } else {
+            if(iface != null)
+                iface.setUniform(gl, "texEnable0", false);
+
             gl.glDisable(GL.GL_TEXTURE_2D);
         }
 
@@ -104,7 +112,7 @@ public class Model {
         gl.glEnd();
 
         if (texture != null) {
-            texture.disable();
+            texture.unbind(gl);
         }
     }
 
@@ -181,11 +189,14 @@ public class Model {
         this.shader = shader;
     }
 
-    public Texture getTexture() {
+    public PlainVanilaTexture getTexture() {
         return texture;
     }
 
     public void setTexture(Texture texture) {
+        this.texture = new PlainVanilaTexture(texture);
+    }
+    public void setTexture(PlainVanilaTexture texture) {
         this.texture = texture;
     }
 
@@ -206,7 +217,7 @@ public class Model {
                 + ",Vn="+(vertices.length/3)
                 + (colors != null    ? ",Cn="+(colors.length/3)     : "")
                 + (texCoords != null ? ",TCn="+(texCoords.length/3) : "")
-                + (texture != null   ? ",T0=#"+texture.getTarget()  : "")
+                + (texture != null   ? ",T0="+texture.toString()  : "")
                 + (shader != null    ? ",S="+shader.toString()      : "") + ")";
     }
 }

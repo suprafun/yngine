@@ -1,5 +1,7 @@
 package sk.yin.yngine.render.shaders;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.media.opengl.GL;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -55,8 +57,9 @@ public class ShaderProgram {
             programInUse = program;
             gl.glUseProgram(program);
 
-            if(iface == null)
+            if (iface == null) {
                 iface = new ShaderProgramInterfaceImpl();
+            }
             return iface;
         }
         return null;
@@ -92,26 +95,49 @@ public class ShaderProgram {
     }
 
     public interface ShaderProgramInterface {
+
         public boolean setUniform(GL gl, String name, Object value);
 
-        public boolean setUniform(GL gl, String string, int textureObject);
+        public boolean setUniform(GL gl, String string, boolean value);
+
+        public boolean setUniform(GL gl, String string, int value);
     }
-    
+
     private class ShaderProgramInterfaceImpl implements ShaderProgramInterface {
+
+        private Map<String, Integer> uniformLocations = new HashMap<String, Integer>();
+
         public boolean setUniform(GL gl, String name, Object value) {
-            if(value instanceof Integer) {
-                return setUniform(gl, name, ((Integer)value).intValue());
+            if (value instanceof Integer) {
+                return setUniform(gl, name, ((Integer) value).intValue());
             }
             return false;
         }
 
         public boolean setUniform(GL gl, String name, int value) {
-            int loc = gl.glGetUniformLocation(program, name);
-            if(loc >= 0) {
+            int loc = getUniformLocation(name, gl);
+            if (loc >= 0) {
                 gl.glUniform1i(loc, value);
                 return true;
+            } else {
+                Log.log("Shader Program Interface has no parameter: " + name);
             }
             return false;
+        }
+
+        // TODO(yin): Find how uniform bools are set.
+        public boolean setUniform(GL gl, String name, boolean value) {
+            return setUniform(gl, name, value ? 1 : 0);
+        }
+
+        private int getUniformLocation(String name, GL gl) {
+            if (uniformLocations.containsKey(name)) {
+                return uniformLocations.get(name);
+            } else {
+                int ret = gl.glGetUniformLocation(program, name);
+                uniformLocations.put(name, ret);
+                return ret;
+            }
         }
     }
 }
