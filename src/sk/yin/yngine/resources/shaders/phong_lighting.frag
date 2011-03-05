@@ -124,7 +124,7 @@ void calculateLighting(in int numLights, in vec3 N, in vec3 V, in float shinines
     // Just loop through each light, and if its enabled add
     // its contributions to the color of the pixel.
     for (int i = 0; i < numLights; i++) {
-        if (isLightEnabled(i) && (i == 0 || i == 1)) {
+        if (isLightEnabled(i)) {
             if (gl_LightSource[i].position.w == 0.0) {
                 directionalLight(i, N, shininess, ambient, diffuse, specular);
 

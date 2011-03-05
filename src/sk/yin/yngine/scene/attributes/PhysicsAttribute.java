@@ -1,5 +1,6 @@
 package sk.yin.yngine.scene.attributes;
 
+import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.Transform;
 import javax.media.opengl.GL;
@@ -83,6 +84,14 @@ public class PhysicsAttribute extends DefaultMotionState
 
     public void transformEnd(GL gl) {
         gl.glPopMatrix();
+    }
+
+    /**
+     * Resets the position in world the the original at simulation setup.
+     * This method retains rotation without changing it.
+     */
+    public void resetToStartOrigin(CollisionObject body) {
+        body.setWorldTransform(startWorldTrans);
     }
 
     @Override
