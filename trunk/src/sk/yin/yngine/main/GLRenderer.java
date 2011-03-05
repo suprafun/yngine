@@ -75,9 +75,14 @@ public class GLRenderer implements GLEventListener {
     private static final boolean DISABLE_LIGHTING = false;
     private static final float DEFUALT_OBJECT_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
+    private static final float BOX_MASS = 1.0f;
     private static final float WORLD_RADIUS = 250.0f,
             WORLD_RADIUS_SQUARED = WORLD_RADIUS * WORLD_RADIUS;
     private GenericLightNode light0, light1, light2 = null;
+    // Animation
+    private ResetBodyStrategy resetBodyStrategy;
+    private TorqueImpulseStrategy torqueImpulseStrategy;
+    private JumpStrategy jumpStrategy;
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
@@ -270,13 +275,16 @@ public class GLRenderer implements GLEventListener {
 
             {
                 CollisionShape shape;
+                float mass;
                 if (i % 2 == 0) {
                     shape = new SphereShape(DEFUALT_OBJECT_RADIUS);
+                    mass = SPHERE_MASS;
                 } else {
                     shape = new BoxShape(new Vector3f(
                             DEFUALT_OBJECT_RADIUS - 0.04f,
                             DEFUALT_OBJECT_RADIUS - 0.04f,
                             DEFUALT_OBJECT_RADIUS - 0.04f));
+                    mass = BOX_MASS;
                 }
                 Vector3f localInertia = new Vector3f(0.0f, 0.0f, 0.0f);
                 shape.calculateLocalInertia(SPHERE_MASS, localInertia);
@@ -331,23 +339,24 @@ public class GLRenderer implements GLEventListener {
             dt = 0.2f;
         }
 
-        if (t0 % 900 > t1 % 900) {
-            Transform t = new Transform();
-            motionState[0].getWorldTransform(t);
-
-            if (t.origin.lengthSquared() > WORLD_RADIUS_SQUARED) {
-                if (motionState[0] instanceof PhysicsAttribute) {
-                    Log.log("B1.|origin|: " + (motionState[0] instanceof PhysicsAttribute) + ": " + t.origin.lengthSquared() + " " + WORLD_RADIUS_SQUARED);
-                    ((PhysicsAttribute) motionState[0]).resetToStartOrigin(rigidBodies[0]);
-                    rigidBodies[0].setAngularVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
-                    rigidBodies[0].setLinearVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
-                }
-            } else {
-                rigidBodies[0].applyTorqueImpulse(new Vector3f(
-                        (float) (Math.random() * 1000 - 500),
-                        (float) (Math.random() * 1000 - 500),
-                        (float) (Math.random() * 1000 - 500)));
+        if (t0 % 800 > t1 % 800) {
+            if (resetBodyStrategy == null) {
+                resetBodyStrategy = new ResetBodyStrategy();
             }
+            resetBodyStrategy.applyStrategy();
+
+            if (torqueImpulseStrategy == null) {
+                torqueImpulseStrategy = new TorqueImpulseStrategy(0, 1);
+            }
+            torqueImpulseStrategy.applyStrategy();
+
+        }
+
+        if (t0 % 2250 > t1 % 2250) {
+            if (jumpStrategy == null) {
+                jumpStrategy = new JumpStrategy(1);
+            }
+            jumpStrategy.applyStrategy();
         }
 
         bulletWorld.stepSimulation(dt * 2.0f, (int) (60 / 5 * 2.0f));
@@ -390,6 +399,104 @@ public class GLRenderer implements GLEventListener {
     public void destroy(GL gl) {
         if (shader != null) {
             shader.destroy(gl);
+        }
+    }
+
+    public interface IGLRendererStrategy {
+
+        public void applyStrategy();
+    }
+
+    private class ResetBodyStrategy implements IGLRendererStrategy {
+
+        public void applyStrategy() {
+            Transform t = new Transform();
+            for (int i = 0; i < MODEL_NUM; i++) {
+                MotionState ms = motionState[i];
+                ms.getWorldTransform(t);
+
+                if (t.origin.lengthSquared() > WORLD_RADIUS_SQUARED) {
+                    if (ms instanceof PhysicsAttribute) {
+                        Log.log(this.getClass().getName() + " => body resetOrigin");
+                        ((PhysicsAttribute) ms).resetToStartOrigin(rigidBodies[i]);
+                        rigidBodies[i].setAngularVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
+                        rigidBodies[i].setLinearVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
+                    }
+                }
+            }
+        }
+    }
+
+    private class TorqueImpulseStrategy implements IGLRendererStrategy {
+
+        public static final double RANDOM_SIZE = 2.0;
+        public static final double RANDOM_BASE = -RANDOM_SIZE / 2;
+        public static final float IMPULSE_SIZE = 660;
+        int forcedIdx, targetIdx;
+
+        public TorqueImpulseStrategy(int forcedIdx, int targetIdx) {
+            this.forcedIdx = forcedIdx;
+            this.targetIdx = targetIdx;
+        }
+
+        public void applyStrategy() {
+            Transform t = new Transform();
+            Vector3f forcedOrigin, targetOrigin, // inputs
+                    forcedTargetVector, rightVector, randomness, // middle steps
+                    applyTorque;                                  // results
+
+            rigidBodies[forcedIdx].getWorldTransform(t);
+            forcedOrigin = new Vector3f(t.origin);
+
+            rigidBodies[targetIdx].getWorldTransform(t);
+            targetOrigin = new Vector3f(t.origin);
+
+            forcedTargetVector = new Vector3f(forcedOrigin);
+            forcedTargetVector.negate();
+            forcedTargetVector.add(targetOrigin);
+
+            forcedTargetVector.normalize();
+
+            rightVector = new Vector3f(0.0f, 1.0f, 0.0f);
+            rightVector.cross(rightVector, forcedTargetVector);
+
+            randomness = new Vector3f(random(), random(), random());
+
+            //Log.log(this.getClass().getName() + "(" + forcedIdx + ", " + targetIdx + ")");
+            //Log.log(this.getClass().getName() + ".Forced    Origin = " + forcedOrigin.toString());
+            //Log.log(this.getClass().getName() + ".Target    Origin = " + targetOrigin.toString());
+            //Log.log(this.getClass().getName() + ".Random Direction = " + randomness.toString());
+            //Log.log(this.getClass().getName() + ".T-F    Direction = " + forcedTargetVector.toString());
+            //Log.log(this.getClass().getName() + ".r(T-F) Direction = " + rightVector.toString());
+
+            applyTorque = new Vector3f(rightVector);
+
+            applyTorque.add(randomness);
+            applyTorque.normalize();
+            applyTorque.scale(IMPULSE_SIZE);
+
+            Log.log(this.getClass().getName() + " => forced applyImpulse: Torque(" + applyTorque.toString() + ")");
+
+            rigidBodies[forcedIdx].applyTorqueImpulse(applyTorque);
+        }
+
+        protected float random() {
+            return (float) (Math.random() * RANDOM_SIZE + RANDOM_BASE);
+        }
+    }
+
+    private class JumpStrategy implements IGLRendererStrategy {
+
+        public final Vector3f JUMP_VECTOR = new Vector3f(0.0f, 125.0f, 0.0f);
+        int jumpIdx;
+
+        public JumpStrategy(int jumpIdx) {
+            this.jumpIdx = jumpIdx;
+        }
+
+        public void applyStrategy() {
+            Log.log(this.getClass().getName() + " => jump applyImpulse Central(" + JUMP_VECTOR.toString() + ")");
+            rigidBodies[jumpIdx].applyCentralImpulse(JUMP_VECTOR);
         }
     }
 }

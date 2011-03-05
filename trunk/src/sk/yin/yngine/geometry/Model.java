@@ -7,7 +7,6 @@ import java.util.List;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import javax.media.opengl.GL;
 import sk.yin.yngine.render.shaders.ShaderProgram.ShaderProgramInterface;
-import sk.yin.yngine.util.Log;
 
 /**
  * Represents a mesh model. Every face verticle has associated table indexes of
