@@ -60,7 +60,6 @@ public class Model {
         if (texture != null && hasTexCoords) {
             texture.bind(gl);
             if(iface != null) {
-                Log.log("texture binding: " + texture.texture().getTextureObject() + " | " + texture.texUnit());
                 iface.setUniform(gl, "TexUnit0", 0);
                 iface.setUniform(gl, "texFunc0", 1 /*TEX_MODULATE*/);
                 iface.setUniform(gl, "texEnable0", 1);

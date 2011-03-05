@@ -59,7 +59,7 @@ public class GLRenderer implements GLEventListener {
 
     private static final int MODEL_NUM = 2;
     Model s[] = new Model[MODEL_NUM];
-    GenericSceneNode so[] = new GenericSceneNode[MODEL_NUM];
+    GenericSceneNode sceneObjectNode[] = new GenericSceneNode[MODEL_NUM];
     float r;
     long t0 = 0, frames = 0;
     private SceneGraph scene;
@@ -70,11 +70,13 @@ public class GLRenderer implements GLEventListener {
     DynamicsWorld bulletWorld;
     RigidBody groundBody;
     MotionState motionState[] = new MotionState[MODEL_NUM];
+    private RigidBody rigidBodies[] = new RigidBody[MODEL_NUM];
     private static final boolean DISABLE_SHADERS = false;
     private static final boolean DISABLE_LIGHTING = false;
     private static final float DEFUALT_OBJECT_RADIUS = 13.0f;
     private static final float SPHERE_MASS = 10.0f;
-    private RigidBody b1;
+    private static final float WORLD_RADIUS = 250.0f,
+            WORLD_RADIUS_SQUARED = WORLD_RADIUS * WORLD_RADIUS;
     private GenericLightNode light0, light1, light2 = null;
 
     public void init(GLAutoDrawable drawable) {
@@ -120,13 +122,13 @@ public class GLRenderer implements GLEventListener {
         URL url;
         String filenames[] = new String[]{
             //"tex07.png",
-            "tex06.2.png",
+            //"tex06.2.png",
             //"tex05-c.png",
-            "tex05.png",
+            //"tex05.png",
             //"tex04.2.png",
             //"tex04.png",
-            "tex03.png",
-            "tex2.png",
+            //"tex03.png",
+            //"tex2.png",
             "tex1.png"};
         Texture texture = null,
                 t = null;
@@ -255,15 +257,16 @@ public class GLRenderer implements GLEventListener {
 
         // Balls
 
-        float x = -0.0f * (MODEL_NUM - 1),
-                xi = 75.0f;
+        float x = -20.0f * (MODEL_NUM - 1),
+                xi = 40.0f;
         for (int i = 0; i < MODEL_NUM; i++, x += xi) {
             GeometryAttribute geometry = new GeometryAttribute(s[i], MaterialDef.Full);
             PhysicsAttribute physics =
-                    new PhysicsAttribute(new Vector3f(x, 20f, 0));
+                    new PhysicsAttribute(new Vector3f(x, 40f, 0));
             GenericSceneNode obj = new GenericSceneNode(geometry, physics);
             scene.addChild(obj);
-            so[i] = obj;
+            sceneObjectNode[i] = obj;
+            motionState[i] = physics;
 
             {
                 CollisionShape shape;
@@ -275,9 +278,6 @@ public class GLRenderer implements GLEventListener {
                             DEFUALT_OBJECT_RADIUS - 0.04f,
                             DEFUALT_OBJECT_RADIUS - 0.04f));
                 }
-                Transform transform = new Transform();
-                transform.origin.set(new Vector3f(x, 10.0f, 0.0f));
-                motionState[i] = physics;
                 Vector3f localInertia = new Vector3f(0.0f, 0.0f, 0.0f);
                 shape.calculateLocalInertia(SPHERE_MASS, localInertia);
                 RigidBodyConstructionInfo rbInfo =
@@ -287,12 +287,13 @@ public class GLRenderer implements GLEventListener {
                 RigidBody body = new RigidBody(rbInfo);
 
                 bulletWorld.addRigidBody(body);
+                rigidBodies[i] = body;
 
                 if (i == 0) {
                     //body.applyCentralImpulse(new Vector3f(300.0f, -150.0f, 10.0f));
                 } else {
-                    body.applyCentralImpulse(new Vector3f(-200.0f, -100.0f, -20.0f));
-                    b1 = body;
+                    //body.applyCentralImpulse(new Vector3f(0.0f, 10.0f, 0.0f));
+                    //
                 }
             }
         }
@@ -331,15 +332,27 @@ public class GLRenderer implements GLEventListener {
         }
 
         if (t0 % 900 > t1 % 900) {
-            b1.applyTorqueImpulse(new Vector3f(
-                    (float) (Math.random() * 3000 - 1500),
-                    (float) (Math.random() * 1000 - 500),
-                    (float) (Math.random() * 3000 - 1500)));
+            Transform t = new Transform();
+            motionState[0].getWorldTransform(t);
+
+            if (t.origin.lengthSquared() > WORLD_RADIUS_SQUARED) {
+                if (motionState[0] instanceof PhysicsAttribute) {
+                    Log.log("B1.|origin|: " + (motionState[0] instanceof PhysicsAttribute) + ": " + t.origin.lengthSquared() + " " + WORLD_RADIUS_SQUARED);
+                    ((PhysicsAttribute) motionState[0]).resetToStartOrigin(rigidBodies[0]);
+                    rigidBodies[0].setAngularVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
+                    rigidBodies[0].setLinearVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
+                }
+            } else {
+                rigidBodies[0].applyTorqueImpulse(new Vector3f(
+                        (float) (Math.random() * 1000 - 500),
+                        (float) (Math.random() * 1000 - 500),
+                        (float) (Math.random() * 1000 - 500)));
+            }
         }
 
         bulletWorld.stepSimulation(dt * 2.0f, (int) (60 / 5 * 2.0f));
 
-        GenericSceneNode target = so[(int) (t1 / 8000 % 2)];
+        GenericSceneNode target = sceneObjectNode[(int) (t1 / 8000 % 2)];
         camera.setTarget(target.attribute(PhysicsAttribute.class).origin());
 
         GL gl = drawable.getGL();
@@ -351,16 +364,15 @@ public class GLRenderer implements GLEventListener {
 
         r += dt;
 
-        double dr = Math.sin(r*1.9),
+        double dr = Math.sin(r * 1.9),
                 rotSpeed = 0.5,
-                lDist = (Math.cos(r/2.3)+1)/2;
-        lDist = 100 - lDist*lDist * 40;
+                lDist = (Math.cos(r / 2.3) + 1) / 2;
+        lDist = 100 - lDist * lDist * 40;
         light0.position(new Vector3f(
-                (float) (Math.sin(r*rotSpeed)*lDist),
-                        30.0f,
-                (float) (Math.cos(r*rotSpeed)*lDist))
-        );
-        light0.direction(new Vector3f((float) -Math.sin(r*rotSpeed + dr), -1.55f, (float) -Math.cos(r*rotSpeed + dr)));
+                (float) (Math.sin(r * rotSpeed) * lDist),
+                30.0f,
+                (float) (Math.cos(r * rotSpeed) * lDist)));
+        light0.direction(new Vector3f((float) -Math.sin(r * rotSpeed + dr), -1.55f, (float) -Math.cos(r * rotSpeed + dr)));
 
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
