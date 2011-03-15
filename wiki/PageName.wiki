@@ -1,0 +1,17 @@
+#summary Graphical architectural art painting inspired by my real thoughts about it.
+
+= Introduction =
+
+Yngine is in stage of a coding playground. This diagram should approximatively describe how I see the development of Yngine now and in near future. 
+
+
+All block should be self-describing, the round ones are missing in code and that's the areas where I have to get most work done. All rectangles can be found in code, the ones with one round corner need a lot of improvements.
+
+||*Fully black arrow* || 
+
+= Details =
+
+[https://docs.google.com/drawings/pub?id=1guYMj3Re5oO2bJmHkGPOtShlCz6gIjK_hxKyMUpZkfg&amp;w=960&amp;h=720 https://docs.google.com/drawings/pub?id=1guYMj3Re5oO2bJmHkGPOtShlCz6gIjK_hxKyMUpZkfg&w=640&h=480&nonsense=.png]
+
+_BTW: Diagram made in Google Documents_
+_@GoogleDocuemntsTeam We all love automatically curved arrow tool... dynamic too!_
