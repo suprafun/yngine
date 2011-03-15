@@ -22,4 +22,4 @@ All block should be self-describing, the round ones are missing in code and that
 
 _BTW: Diagram made in Google Documents_
 
-_@GoogleDocuemntsTeam We all love automatically curved arrow tool... dynamic too!_
+_@GoogleDocuementsTeam We all love automatically curved arrow tool... dynamically adjustable too! (... whatever it means)_
