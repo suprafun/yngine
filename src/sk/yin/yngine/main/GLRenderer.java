@@ -54,13 +54,13 @@ import sk.yin.yngine.scene.decorators.VertexBasedColorDecorator;
 import sk.yin.yngine.util.Log;
 
 /**
- * Event loop hooks. Based on Brian Paul's and others code.
+ * Event loop hooks. Based on Brian Paul'models and others code.
  * @author Matej 'Yin' Gagyi (yinotaurus+yngine.src@gmail.com)
  */
 public class GLRenderer implements GLEventListener {
 
     private static final int MODEL_NUM = 2;
-    Model s[] = new Model[MODEL_NUM];
+    Model models[] = new Model[MODEL_NUM];
     GenericSceneNode sceneObjectNode[] = new GenericSceneNode[MODEL_NUM];
     float r;
     long t0 = 0, frames = 0;
@@ -89,6 +89,7 @@ public class GLRenderer implements GLEventListener {
     private DynamicSpotLightStrategy spotLightStrategy;
     private CameraPositionChangeStrategy cameraPositionChangeStrategy;
     private Texture[] textures;
+    private CycleTexturesStrategy cycleTexturesStrategy;
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
@@ -174,11 +175,16 @@ public class GLRenderer implements GLEventListener {
 
         }
 
-        if (t0 % 2000 > t1 % 2000) {
+        if (t0 % 4000 > t1 % 4000) {
             if (jumpStrategy == null) {
                 jumpStrategy = new JumpStrategy(1);
             }
             jumpStrategy.applyStrategy();
+
+            if (cycleTexturesStrategy == null) {
+                cycleTexturesStrategy = new CycleTexturesStrategy(models[0], textures);
+            }
+            cycleTexturesStrategy.applyStrategy();
         }
 
         bulletWorld.stepSimulation(dt * 2.0f, 24);
@@ -273,6 +279,7 @@ public class GLRenderer implements GLEventListener {
             float max[] = new float[1];
             gl.glGetFloatv(GL.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, max, 0);
 
+            Log.log("Enabling anisotropic filtering: " + max[0] + "X");
             gl.glTexParameterf(GL.GL_TEXTURE_2D,
                     GL.GL_TEXTURE_MAX_ANISOTROPY_EXT,
                     max[0]);
@@ -407,27 +414,27 @@ public class GLRenderer implements GLEventListener {
                 builder.addDecorators(
                         new VertexBasedColorDecorator(),
                         new NormalBasedTextureDecorator());
-                s[i] =
+                models[i] =
                         SphereModelGenerator.instance().createSphere(DEFUALT_OBJECT_RADIUS, 5, builder, base);
                 // TODO(mgagyi): This should be done by decorators in ModelBuilder
-                s[i].setTexture(texture);
+                models[i].setTexture(texture);
             } else {
                 // Box
                 builder.addDecorators(
                         new NormalBasedColorDecorator());
-                s[i] = BoxModelGenerator.instance().createBox(builder, DEFUALT_OBJECT_RADIUS, DEFUALT_OBJECT_RADIUS,
+                models[i] = BoxModelGenerator.instance().createBox(builder, DEFUALT_OBJECT_RADIUS, DEFUALT_OBJECT_RADIUS,
                         DEFUALT_OBJECT_RADIUS);
-                //s[i].setTexture(texture);
+                //models[i].setTexture(texture);
             }
-            s[i].setShader(shader);
-            Log.log("SceneModel #" + i + ": " + s[i].toString());
+            models[i].setShader(shader);
+            Log.log("SceneModel #" + i + ": " + models[i].toString());
         }
 
         // Create scene nodes
         float x = -20.0f * (MODEL_NUM - 1),
                 xi = 40.0f;
         for (int i = 0; i < MODEL_NUM; i++, x += xi) {
-            GeometryAttribute geometry = new GeometryAttribute(s[i], MaterialDef.Full);
+            GeometryAttribute geometry = new GeometryAttribute(models[i], MaterialDef.Full);
             PhysicsAttribute physics =
                     new PhysicsAttribute(new Vector3f(x, 40f, 0));
             GenericSceneNode obj = new GenericSceneNode(geometry, physics);
@@ -675,6 +682,27 @@ public class GLRenderer implements GLEventListener {
 
         private float randomize(float mid, float spread) {
             return mid - spread / 2 + (float) Math.random() * spread;
+        }
+    }
+
+    private static class CycleTexturesStrategy implements IGLRendererStrategy {
+
+        Model model;
+        Texture[] textures;
+        int current = -1;
+
+        public CycleTexturesStrategy(Model model, Texture[] textures) {
+            this.model = model;
+            this.textures = textures;
+        }
+
+        public void applyStrategy() {
+            if (model == null || textures == null || textures.length == 0) {
+                return;
+            }
+
+            current = (current + 1) % textures.length;
+            model.setTexture(textures[current]);
         }
     }
 }
