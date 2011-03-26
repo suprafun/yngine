@@ -18,9 +18,13 @@ public class GenericLightNode implements ILightNode {
 
     public Vector3f position = new Vector3f(),
             direction = new Vector3f();
-    public float ambient[], diffuse[], specular[], cutoff, spotExp;
+    public float ambient[], diffuse[], specular[],
+            cutoff = 180.0f, spotExp = 1.0f;
     private int glLight = -1;
     private LightType type = LightType.Point;
+    private float attenuationConstant = 1.0f,
+            attenuationLinear = 0.0f,
+            attenuationQuadratic = 0.0f;
 
     public GenericLightNode() {
     }
@@ -35,6 +39,18 @@ public class GenericLightNode implements ILightNode {
 
     public void stopExp(float spotExp) {
         this.spotExp = spotExp;
+    }
+
+    public void attenuationConstant(float attenuationConstant) {
+        this.attenuationConstant = attenuationConstant;
+    }
+
+    public void attenuationLinear(float attenuationLinear) {
+        this.attenuationLinear = attenuationLinear;
+    }
+
+    public void attenuationQuadratic(float attenuationQuadratic) {
+        this.attenuationQuadratic = attenuationQuadratic;
     }
 
     public enum LightType {
@@ -71,6 +87,10 @@ public class GenericLightNode implements ILightNode {
             } else {
                 gl.glLightfv(glLight, GL.GL_SPECULAR, new float[]{0f, 0f, 0f, 0f}, 0);
             }
+            
+            gl.glLightf(glLight, GL.GL_CONSTANT_ATTENUATION, attenuationConstant);
+            gl.glLightf(glLight, GL.GL_LINEAR_ATTENUATION, attenuationLinear);
+            gl.glLightf(glLight, GL.GL_QUADRATIC_ATTENUATION, attenuationQuadratic);
 
             switch (type) {
                 case Directional:

@@ -1,6 +1,8 @@
 package sk.yin.yngine.resources;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -17,6 +19,17 @@ public class ResourceGetter {
             instance = new ResourceGetter();
         }
         return instance.getClass().getResource(name);
+    }
+
+    public static List<URL> getResources(String names[]) {
+        List<URL> urls = new ArrayList<URL>();
+        for (String file : names) {
+            URL url = getResource(file);
+            if (url != null) {
+                urls.add(url);
+            }
+        }
+        return urls;
     }
 
     public static URL getFirstResourcePresent(String names[]) {

@@ -18,6 +18,7 @@ import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
+import java.util.List;
 import sk.yin.yngine.scene.generators.SphereModelGenerator;
 import sk.yin.yngine.geometry.Model;
 import javax.media.opengl.GL;
@@ -76,16 +77,18 @@ public class GLRenderer implements GLEventListener {
     private static final boolean DISABLE_SHADERS = false;
     private static final boolean DISABLE_LIGHTING = false;
     private static final float DEFUALT_OBJECT_RADIUS = 13.0f;
-    private static final float SPHERE_MASS = 10.0f;
-    private static final float BOX_MASS = 1.0f;
+    private static final float SPHERE_MASS = 5.0f;
+    private static final float BOX_MASS = 2.0f;
     private static final float WORLD_RADIUS = 250.0f,
             WORLD_RADIUS_SQUARED = WORLD_RADIUS * WORLD_RADIUS;
-    private GenericLightNode light0, light1, light2 = null;
+    private GenericLightNode light0, light1;
     // Animation
     private ResetBodyStrategy resetBodyStrategy;
     private TorqueImpulseStrategy torqueImpulseStrategy;
     private JumpStrategy jumpStrategy;
     private DynamicSpotLightStrategy spotLightStrategy;
+    private CameraPositionChangeStrategy cameraPositionChangeStrategy;
+    private Texture[] textures;
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
@@ -178,10 +181,7 @@ public class GLRenderer implements GLEventListener {
             jumpStrategy.applyStrategy();
         }
 
-        bulletWorld.stepSimulation(dt * 2.0f, (int) (60 / 5 * 2.0f));
-
-        GenericSceneNode target = sceneObjectNode[(int) (t1 / 8000 % 2)];
-        camera.setTarget(target.attribute(PhysicsAttribute.class).origin());
+        bulletWorld.stepSimulation(dt * 2.0f, 24);
 
         GL gl = drawable.getGL();
 
@@ -196,6 +196,14 @@ public class GLRenderer implements GLEventListener {
             spotLightStrategy = new DynamicSpotLightStrategy(light0);
         }
         spotLightStrategy.applyStrategy();
+
+        if (t0 / 1000 % 2 > t1 / 1000 % 2 || frames == 0) {
+            if (cameraPositionChangeStrategy == null) {
+                cameraPositionChangeStrategy =
+                        new CameraPositionChangeStrategy(camera);
+            }
+            cameraPositionChangeStrategy.applyStrategy();
+        }
 
         // Clear the drawing area
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
@@ -238,22 +246,28 @@ public class GLRenderer implements GLEventListener {
      * @return
      */
     private Texture setupTexture(GL gl) {
-        URL url;
+        
         String filenames[] = new String[]{
-            //"tex07.png",
-            //"tex06.2.png",
-            //"tex05-c.png",
-            //"tex05.png",
-            //"tex04.2.png",
-            //"tex04.png",
-            //"tex03.png",
-            //"tex2.png",
+            "tex07.png",
+            "tex06.2.png",
+            "tex05-c.png",
+            "tex05.png",
+            "tex04.2.png",
+            "tex04.png",
+            "tex03.png",
+            "tex2.png",
             "tex1.png"};
-        url = ResourceGetter.getFirstResourcePresent(filenames);
-        if (url != null) {
+        List<URL> urls = ResourceGetter.getResources(filenames);
+
+        textures = new Texture[urls.size()];
+        int i = 0;
+        for (URL url : urls) {
             texture = TextureLoader.getInstance().load(url);
             texture.setTexParameteri(GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
             texture.setTexParameteri(GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+            texture.setTexParameteri(GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
+            texture.setTexParameteri(GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR);
+            textures[i++] = texture;
         }
         if (gl.isExtensionAvailable("GL_EXT_texture_filter_anisotropic")) {
             float max[] = new float[1];
@@ -290,7 +304,6 @@ public class GLRenderer implements GLEventListener {
         camera = new LookAtCamera();
         camera.setPosition(new Vector3f(333f, 250f, 1000f));
         camera = new SmoothingCameraProxy(camera);
-        camera.setPosition(new Vector3f(0, 50f, 150f));
         scene.addChild(new GenericSceneNode(camera));
         scene.setCamera(camera);
     }
@@ -313,16 +326,17 @@ public class GLRenderer implements GLEventListener {
         }
 
         light0 = new GenericLightNode(LightType.Spot);
-        light0.ambient(new float[]{0.1f, 0.1f, 0.1f, 1.0f});
+        light0.ambient(new float[]{0.02f, 0.02f, 0.02f, 1.0f});
         light0.diffuse(new float[]{0.8f, 0.8f, 0.8f, 1.0f});
         light0.specular(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
         light0.cutoff(60.0f);
         light0.stopExp(0.75f);
+        light0.attenuationLinear(0.01f);
         scene.addChild(light0);
 
         light1 = new GenericLightNode(LightType.Spot);
-        light1.ambient(new float[]{0.1f, 0.1f, 0.1f, 1.0f});
-        light1.diffuse(new float[]{0.7f, 0.7f, 0.7f, 1.0f});
+        light1.ambient(new float[]{0.02f, 0.02f, 0.02f, 1.0f});
+        light1.diffuse(new float[]{0.8f, 0.8f, 0.8f, 1.0f});
         light1.specular(new float[]{0.3f, 0.3f, 0.3f, 1.0f});
         light1.cutoff(50.0f);
         light1.stopExp(0.33f);
@@ -612,6 +626,55 @@ public class GLRenderer implements GLEventListener {
                     (float) (Math.cos(r * rotSpeed) * lDist)));
             stopLight.direction(new Vector3f((float) -Math.sin(r * rotSpeed + dr), -1.55f, (float) -Math.cos(r * rotSpeed + dr)));
 
+        }
+    }
+
+    private class CameraPositionChangeStrategy implements IGLRendererStrategy {
+
+        LookAtCamera camera;
+        int sceneIdx = -1;
+        int positionIdx = -1;
+        public final Vector3f[] POSITIONS = new Vector3f[]{
+            new Vector3f(0, 50f, 150f),
+            new Vector3f(randomize(0f, 300f), randomize(50f, 100f), randomize(0f, 300f)),
+            new Vector3f(randomize(0f, 300f), randomize(50f, 100f), randomize(0f, 300f)),
+            new Vector3f(randomize(0f, 300f), randomize(50f, 100f), randomize(0f, 300f))
+        };
+
+        public CameraPositionChangeStrategy(LookAtCamera camera) {
+            this.camera = camera;
+            applyStrategy();
+        }
+
+        public void applyStrategy() {
+            double rnd = Math.random();
+            if (positionIdx == -1 || sceneIdx == -1) {
+                Log.log(this.getClass().getName() + " => camera init(...)");
+                changeTarget();
+                changePosition();
+            } else if (rnd <= 0.125) {
+                Log.log(this.getClass().getName() + " => camera changeTarget");
+                changeTarget();
+            } else if (rnd <= 0.375) {
+                Log.log(this.getClass().getName() + " => camera changePosition");
+                changePosition();
+            }
+        }
+
+        private void changeTarget() {
+            sceneIdx = (sceneIdx + 1) % MODEL_NUM;
+            GenericSceneNode target = sceneObjectNode[sceneIdx];
+            Vector3f targetOrigin = target.attribute(PhysicsAttribute.class).origin();
+            camera.setTarget(targetOrigin);
+        }
+
+        private void changePosition() {
+            positionIdx = (positionIdx + 1) % POSITIONS.length;
+            camera.setPosition(POSITIONS[positionIdx]);
+        }
+
+        private float randomize(float mid, float spread) {
+            return mid - spread / 2 + (float) Math.random() * spread;
         }
     }
 }
