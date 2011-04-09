@@ -19,6 +19,7 @@ import com.bulletphysics.linearmath.Transform;
 import com.sun.opengl.util.texture.Texture;
 import java.net.URL;
 import java.util.List;
+import java.util.logging.Logger;
 import sk.yin.yngine.scene.generators.SphereModelGenerator;
 import sk.yin.yngine.geometry.Model;
 import javax.media.opengl.GL;
@@ -26,14 +27,15 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 import javax.vecmath.Vector3f;
+import org.python.core.PyArray;
 import sk.yin.yngine.geometry.Point3f;
-import sk.yin.yngine.resources.ResourceGetter;
 import sk.yin.yngine.particlesystem.ParticleUnit;
 import sk.yin.yngine.particlesystem.SimpleConfig;
 import sk.yin.yngine.particlesystem.SimpleFactory;
 import sk.yin.yngine.render.lights.MaterialDef;
 import sk.yin.yngine.render.shaders.ShaderFactory;
 import sk.yin.yngine.render.shaders.ShaderProgram;
+import sk.yin.yngine.resources.ResourceGetter;
 import sk.yin.yngine.scene.GenericLightNode;
 import sk.yin.yngine.scene.GenericLightNode.LightType;
 import sk.yin.yngine.scene.io.TextureLoader;
@@ -51,6 +53,7 @@ import sk.yin.yngine.scene.generators.ModelBuilder;
 import sk.yin.yngine.scene.decorators.NormalBasedTextureDecorator;
 import sk.yin.yngine.scene.decorators.StaticColorDecorator;
 import sk.yin.yngine.scene.decorators.VertexBasedColorDecorator;
+import sk.yin.yngine.scripts.jython.JythonConnector;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -59,7 +62,14 @@ import sk.yin.yngine.util.Log;
  */
 public class GLRenderer implements GLEventListener {
 
-    private static final int MODEL_NUM = 2;
+    public static final boolean DISABLE_SHADERS = false;
+    public static final boolean DISABLE_LIGHTING = false;
+    public static final int MODEL_NUM = 2;
+    public static final float DEFUALT_OBJECT_RADIUS = 13.0f;
+    public static final float SPHERE_MASS = 5.0f;
+    public static final float BOX_MASS = 2.0f;
+    public static final float WORLD_RADIUS = 250.0f,
+            WORLD_RADIUS_SQUARED = WORLD_RADIUS * WORLD_RADIUS;
     Model models[] = new Model[MODEL_NUM];
     GenericSceneNode sceneObjectNode[] = new GenericSceneNode[MODEL_NUM];
     float r;
@@ -73,14 +83,7 @@ public class GLRenderer implements GLEventListener {
     DynamicsWorld bulletWorld;
     RigidBody groundBody;
     MotionState motionState[] = new MotionState[MODEL_NUM];
-    private RigidBody rigidBodies[] = new RigidBody[MODEL_NUM];
-    private static final boolean DISABLE_SHADERS = false;
-    private static final boolean DISABLE_LIGHTING = false;
-    private static final float DEFUALT_OBJECT_RADIUS = 13.0f;
-    private static final float SPHERE_MASS = 5.0f;
-    private static final float BOX_MASS = 2.0f;
-    private static final float WORLD_RADIUS = 250.0f,
-            WORLD_RADIUS_SQUARED = WORLD_RADIUS * WORLD_RADIUS;
+    RigidBody rigidBodies[] = new RigidBody[MODEL_NUM];
     private GenericLightNode light0, light1;
     // Animation
     private ResetBodyStrategy resetBodyStrategy;
@@ -90,6 +93,9 @@ public class GLRenderer implements GLEventListener {
     private CameraPositionChangeStrategy cameraPositionChangeStrategy;
     private Texture[] textures;
     private CycleTexturesStrategy cycleTexturesStrategy;
+    // Development
+    private static final Logger log = Logger.getLogger(GLRenderer.class.getName());
+    private JythonConnector demoMainScriptPy;
 
     public void init(GLAutoDrawable drawable) {
         // Use debug pipeline
@@ -101,11 +107,54 @@ public class GLRenderer implements GLEventListener {
         // OpenGL config
         setupGL(gl);
 
+        demoMainScriptPy = new JythonConnector("DemoMainScript.py");
+        demoMainScriptPy.set("gl", gl);
+        demoMainScriptPy.set("DISABLE_SHADERS", DISABLE_SHADERS);
+        demoMainScriptPy.run();
+        PyArray ary = (PyArray) demoMainScriptPy.get("textures");
+        textures = (Texture[]) ary.getArray();
+
+        shader = (ShaderProgram) demoMainScriptPy.get("shader").__tojava__(ShaderProgram.class);
+        /*
+        try {
+
+        GroovyScriptEngine gse = new GroovyScriptEngine("C:");
+        Binding binding = new Binding();
+        binding.setVariable("gl", gl);
+        binding.setVariable("DISABLE_SHADERS", false);
+        Object obj = gse.run("../scripts/DemoMainScript.groovy", binding);
+        texture = (Texture) binding.getVariable("texture");
+        textures = (Texture[]) binding.getVariable("textures");
+        shader = (ShaderProgram) binding.getVariable("shader");
+        Log.log("Loaded textures from groovy: " + textures.length);
+        } catch (IOException ex) {
+        log.log(Level.SEVERE, null, ex);
+        } catch (ResourceException ex) {
+        log.log(Level.SEVERE, null, ex);
+        } catch (ScriptException ex) {
+        log.log(Level.SEVERE, null, ex);
+         * } catch (MissingPropertyException ex) {
+        log.log(Level.WARNING, null, ex);
+        }
+        //*/
+
         // Textures
-        texture = setupTexture(gl);
+        if (texture == null) {
+            if(textures == null || textures.length == 0) {
+                texture = setupTexture(gl);
+            } else {
+                texture = textures[0];
+            }
+        } else {
+            log.info("Textures already loaded!");
+        }
 
         // Shaders
-        shader = setupShaders(gl);
+        if (shader == null) {
+            shader = setupShaders(gl);
+        } else {
+            log.info("Shaders already loaded!");
+        }
 
         // Scene graph
         scene = new SceneGraph();
@@ -164,12 +213,12 @@ public class GLRenderer implements GLEventListener {
 
         if (t0 % 750 > t1 % 750) {
             if (resetBodyStrategy == null) {
-                resetBodyStrategy = new ResetBodyStrategy();
+                resetBodyStrategy = new ResetBodyStrategy(this);
             }
             resetBodyStrategy.applyStrategy();
 
             if (torqueImpulseStrategy == null) {
-                torqueImpulseStrategy = new TorqueImpulseStrategy(0, 1);
+                torqueImpulseStrategy = new TorqueImpulseStrategy(0, 1, this);
             }
             torqueImpulseStrategy.applyStrategy();
 
@@ -177,7 +226,7 @@ public class GLRenderer implements GLEventListener {
 
         if (t0 % 4000 > t1 % 4000) {
             if (jumpStrategy == null) {
-                jumpStrategy = new JumpStrategy(1);
+                jumpStrategy = new JumpStrategy(1, this);
             }
             jumpStrategy.applyStrategy();
 
@@ -199,14 +248,14 @@ public class GLRenderer implements GLEventListener {
         r += dt;
 
         if (spotLightStrategy == null) {
-            spotLightStrategy = new DynamicSpotLightStrategy(light0);
+            spotLightStrategy = new DynamicSpotLightStrategy(light0, this);
         }
         spotLightStrategy.applyStrategy();
 
         if (t0 / 1000 % 2 > t1 / 1000 % 2 || frames == 0) {
             if (cameraPositionChangeStrategy == null) {
                 cameraPositionChangeStrategy =
-                        new CameraPositionChangeStrategy(camera);
+                        new CameraPositionChangeStrategy(camera, this);
             }
             cameraPositionChangeStrategy.applyStrategy();
         }
@@ -299,7 +348,7 @@ public class GLRenderer implements GLEventListener {
         shader = ShaderFactory.getInstance().loadShader(gl, "ffpe");
         Log.log("Shader to use in scene: " + shader.toString());
         ShaderProgram.ShaderProgramInterface iface = shader.use(gl);
-        iface.setUniform(gl, "spotFadeOff", 1);
+        iface.uniform(gl, "spotFadeOff", 1);
         return shader;
     }
 
@@ -461,6 +510,7 @@ public class GLRenderer implements GLEventListener {
                 RigidBodyConstructionInfo rbInfo =
                         new RigidBodyConstructionInfo(SPHERE_MASS, motionState[i], shape, localInertia);
                 rbInfo.restitution = 0.1f;
+                rbInfo.friction = .5f;
 
                 RigidBody body = new RigidBody(rbInfo);
 
@@ -493,216 +543,5 @@ public class GLRenderer implements GLEventListener {
         scene.addChild(new GenericSceneNode(new ParticleUnitAttribute(e1)));
 
         return e1;
-    }
-
-    /**
-     * Using this interface, different actions can be triggered upon the scene.
-     */
-    public interface IGLRendererStrategy {
-
-        public void applyStrategy();
-    }
-
-    /**
-     * If an object falls off the ground and reaches certain distance from
-     * center of the scene, this strategy moves it back to position at start
-     * of animation.
-     */
-    private class ResetBodyStrategy implements IGLRendererStrategy {
-
-        public void applyStrategy() {
-            Transform t = new Transform();
-            for (int i = 0; i < MODEL_NUM; i++) {
-                MotionState ms = motionState[i];
-                ms.getWorldTransform(t);
-
-                if (t.origin.lengthSquared() > WORLD_RADIUS_SQUARED) {
-                    if (ms instanceof PhysicsAttribute) {
-                        Log.log(this.getClass().getName() + " => body resetOrigin");
-                        ((PhysicsAttribute) ms).resetToStartOrigin(rigidBodies[i]);
-                        rigidBodies[i].setAngularVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
-                        rigidBodies[i].setLinearVelocity(new Vector3f(0.0f, 0.0f, 0.0f));
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Makes forced object hunt a target object by applying torque implulse.
-     * The impulses have some level of randomness aplied to make the movements
-     * less predictable and more entertaining.
-     */
-    private class TorqueImpulseStrategy implements IGLRendererStrategy {
-
-        public static final double RANDOM_SIZE = 2.0;
-        public static final double RANDOM_BASE = -RANDOM_SIZE / 2;
-        public static final float IMPULSE_SIZE = 660;
-        int forcedIdx, targetIdx;
-
-        public TorqueImpulseStrategy(int forcedIdx, int targetIdx) {
-            this.forcedIdx = forcedIdx;
-            this.targetIdx = targetIdx;
-        }
-
-        public void applyStrategy() {
-            Transform t = new Transform();
-            Vector3f forcedOrigin, targetOrigin, // inputs
-                    forcedTargetVector, rightVector, randomness, // middle steps
-                    applyTorque;                                  // results
-
-            rigidBodies[forcedIdx].getWorldTransform(t);
-            forcedOrigin = new Vector3f(t.origin);
-
-            rigidBodies[targetIdx].getWorldTransform(t);
-            targetOrigin = new Vector3f(t.origin);
-
-            forcedTargetVector = new Vector3f(forcedOrigin);
-            forcedTargetVector.negate();
-            forcedTargetVector.add(targetOrigin);
-
-            forcedTargetVector.normalize();
-
-            rightVector = new Vector3f(0.0f, 1.0f, 0.0f);
-            rightVector.cross(rightVector, forcedTargetVector);
-
-            randomness = new Vector3f(random(), random(), random());
-
-            //Log.log(this.getClass().getName() + "(" + forcedIdx + ", " + targetIdx + ")");
-            //Log.log(this.getClass().getName() + ".Forced    Origin = " + forcedOrigin.toString());
-            //Log.log(this.getClass().getName() + ".Target    Origin = " + targetOrigin.toString());
-            //Log.log(this.getClass().getName() + ".Random Direction = " + randomness.toString());
-            //Log.log(this.getClass().getName() + ".T-F    Direction = " + forcedTargetVector.toString());
-            //Log.log(this.getClass().getName() + ".r(T-F) Direction = " + rightVector.toString());
-
-            applyTorque = new Vector3f(rightVector);
-
-            applyTorque.add(randomness);
-            applyTorque.normalize();
-            applyTorque.scale(IMPULSE_SIZE);
-
-            Log.log(this.getClass().getName() + " => forced applyImpulse: Torque(" + applyTorque.toString() + ")");
-
-            rigidBodies[forcedIdx].applyTorqueImpulse(applyTorque);
-        }
-
-        protected float random() {
-            return (float) (Math.random() * RANDOM_SIZE + RANDOM_BASE);
-        }
-    }
-
-    /**
-     * Forces an object to jump vertically upeards.
-     */
-    private class JumpStrategy implements IGLRendererStrategy {
-
-        public final Vector3f JUMP_VECTOR = new Vector3f(0.0f, 125.0f, 0.0f);
-        int jumpIdx;
-
-        public JumpStrategy(int jumpIdx) {
-            this.jumpIdx = jumpIdx;
-        }
-
-        public void applyStrategy() {
-            Log.log(this.getClass().getName() + " => jump applyImpulse Central(" + JUMP_VECTOR.toString() + ")");
-            rigidBodies[jumpIdx].applyCentralImpulse(JUMP_VECTOR);
-        }
-    }
-
-    /**
-     * This controls the spot light circulating around the ground. It smoothly
-     * changes diameter of light trajectory to enable sporadical occurence of
-     * lighting effects.
-     */
-    private class DynamicSpotLightStrategy implements IGLRendererStrategy {
-
-        GenericLightNode stopLight;
-
-        public DynamicSpotLightStrategy(GenericLightNode stopLight) {
-            this.stopLight = stopLight;
-        }
-
-        public void applyStrategy() {
-            double dr = Math.sin(r * 1.9),
-                    rotSpeed = 0.5,
-                    lDist = (Math.cos(r / 2.3) + 1) / 2;
-            lDist = 100 - lDist * lDist * 40;
-            stopLight.position(new Vector3f(
-                    (float) (Math.sin(r * rotSpeed) * lDist),
-                    30.0f,
-                    (float) (Math.cos(r * rotSpeed) * lDist)));
-            stopLight.direction(new Vector3f((float) -Math.sin(r * rotSpeed + dr), -1.55f, (float) -Math.cos(r * rotSpeed + dr)));
-
-        }
-    }
-
-    private class CameraPositionChangeStrategy implements IGLRendererStrategy {
-
-        LookAtCamera camera;
-        int sceneIdx = -1;
-        int positionIdx = -1;
-        public final Vector3f[] POSITIONS = new Vector3f[]{
-            new Vector3f(0, 50f, 150f),
-            new Vector3f(randomize(0f, 300f), randomize(50f, 100f), randomize(0f, 300f)),
-            new Vector3f(randomize(0f, 300f), randomize(50f, 100f), randomize(0f, 300f)),
-            new Vector3f(randomize(0f, 300f), randomize(50f, 100f), randomize(0f, 300f))
-        };
-
-        public CameraPositionChangeStrategy(LookAtCamera camera) {
-            this.camera = camera;
-            applyStrategy();
-        }
-
-        public void applyStrategy() {
-            double rnd = Math.random();
-            if (positionIdx == -1 || sceneIdx == -1) {
-                Log.log(this.getClass().getName() + " => camera init(...)");
-                changeTarget();
-                changePosition();
-            } else if (rnd <= 0.125) {
-                Log.log(this.getClass().getName() + " => camera changeTarget");
-                changeTarget();
-            } else if (rnd <= 0.375) {
-                Log.log(this.getClass().getName() + " => camera changePosition");
-                changePosition();
-            }
-        }
-
-        private void changeTarget() {
-            sceneIdx = (sceneIdx + 1) % MODEL_NUM;
-            GenericSceneNode target = sceneObjectNode[sceneIdx];
-            Vector3f targetOrigin = target.attribute(PhysicsAttribute.class).origin();
-            camera.setTarget(targetOrigin);
-        }
-
-        private void changePosition() {
-            positionIdx = (positionIdx + 1) % POSITIONS.length;
-            camera.setPosition(POSITIONS[positionIdx]);
-        }
-
-        private float randomize(float mid, float spread) {
-            return mid - spread / 2 + (float) Math.random() * spread;
-        }
-    }
-
-    private static class CycleTexturesStrategy implements IGLRendererStrategy {
-
-        Model model;
-        Texture[] textures;
-        int current = -1;
-
-        public CycleTexturesStrategy(Model model, Texture[] textures) {
-            this.model = model;
-            this.textures = textures;
-        }
-
-        public void applyStrategy() {
-            if (model == null || textures == null || textures.length == 0) {
-                return;
-            }
-
-            current = (current + 1) % textures.length;
-            model.setTexture(textures[current]);
-        }
     }
 }

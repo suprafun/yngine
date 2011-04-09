@@ -7,5 +7,10 @@
         "main.frag",
         "texturing.frag",
         "phong_lighting.frag"
-    ]
+    ],
+    "defaults": {
+        "uniform": {
+            "spotFadeOff": 1
+        }
+    }
 }

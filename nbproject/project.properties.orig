@@ -33,8 +33,7 @@ javac.classpath=\
     ${libs.JOGL.classpath}:\
     ${libs.commons-lang.classpath}:\
     ${libs.jbullet.classpath}:\
-    ${libs.json.classpath}:\
-    ${libs.Jython-2.5.2.classpath}
+    ${libs.json.classpath}
 # Space-separated list of extra javac options
 javac.compilerargs=
 javac.deprecation=true

@@ -2,7 +2,9 @@ package sk.yin.yngine.render.shaders;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Set;
 import javax.media.opengl.GL;
+import org.json.simple.JSONObject;
 import sk.yin.yngine.render.shaders.ShaderProgramBuilder.ShaderType;
 import sk.yin.yngine.render.shaders.json.ShaderDefinition;
 import sk.yin.yngine.render.shaders.json.ShaderJSONDefinition;
@@ -16,12 +18,6 @@ import sk.yin.yngine.util.Log;
  */
 public class ShaderFactory {
 
-    private static final String DEFAULT_VERTEX_SHADER = "default.vert.oglsl";
-    private static final String DEFAULT_FRAGMENT_SHADER = "default.frag.oglsl";
-    private static final String LIB_VERT = "shaders/main.vert";
-    private static final String LIB_FRAG = "shaders/main.frag";
-    private static final String LIB_FRAG_LIGHT = "shaders/phong_lighting.frag";
-    private static final String LIB_FRAG_TEX = "shaders/texturing.frag";
     private static final String SHADER_LIB_PATH = "shaders";
     private static ShaderFactory instance;
 
@@ -46,8 +42,17 @@ public class ShaderFactory {
      * @return ShaderProgram instance.
      */
     public ShaderProgram loadShader(GL gl, String name) {
-        // Stupid NetBeans won't let me cut out the .json extension!
-        // TODO(yin): Handle the comment abouf file extensions commented above.
+        return loadShader(gl, name, true);
+    }
+
+    /**
+     * Creates, compiles and links a shader program from shader library.
+     * @param gl GL instance
+     * @param name Name of the shader to load.
+     * @param defaultValues Use default values, if defined in shader definition.
+     * @return ShaderProgram instance.
+     */
+    public ShaderProgram loadShader(GL gl, String name, boolean defaultValues) {
         String path = SHADER_LIB_PATH + '/' + name + ".shader.json";
         Log.log("Loading shader from: " + path);
 
@@ -55,14 +60,18 @@ public class ShaderFactory {
             URL url = ResourceGetter.getResource(path);
             ShaderDefinition def = ShaderJSONDefinition.loadShader(url);
             if (def != null) {
-                return createShaderProgram(gl, def);
+                ShaderProgram ret = createShaderProgram(gl, def);
+                if (defaultValues) {
+                    Log.log("Using default values for shader variables: ");
+                    useDefaultValues(gl, ret, def);
+                }
+                return ret;
             }
         } catch (IOException ex) {
             Log.log("Couldn't load shader named: " + name, ex);
         }
         return null;
     }
-
 
     /**
      * Creates, compiles and links shader program sources defined in
@@ -75,7 +84,7 @@ public class ShaderFactory {
         ShaderProgramBuilder shaderBuilder = new ShaderProgramBuilder();
         String source;
 
-        for (String dep : def.getDeps()) {
+        for (String dep : def.deps()) {
             if (dep.endsWith(".vert")) {
                 source = getShaderSource(dep);
                 Log.log("Vertex shader source: " + dep);
@@ -104,60 +113,23 @@ public class ShaderFactory {
         return FileUtil.getInstance().read(resource);
     }
 
-    /**
-     * Creates, compiles and links the "library" shader program.
-     * @param gl GL instance
-     * @return ShaderProgram instance.
-     */
-    @Deprecated
-    public ShaderProgram createLib(GL gl) {
-        String vertexUrl[] = new String[]{LIB_VERT};
-        String fragmentUrl[] = new String[]{LIB_FRAG, LIB_FRAG_LIGHT, LIB_FRAG_TEX};
-        return createShaderProgram(gl, vertexUrl, fragmentUrl);
+    private void useDefaultValues(GL gl, ShaderProgram program, ShaderDefinition def) {
+        ShaderProgram.ShaderProgramInterface iface = program.use(gl);
+        useValues(gl, iface, def.defaults("uniform"), def.defaults("attribute"));
     }
 
-    /**
-     * Creates, compiles and links the "default" shader program.
-     * @param gl OpenGL context
-     * @return ShaderProgram instance
-     */
-    @Deprecated
-    public ShaderProgram createShaderProgram(GL gl) {
-        String vertexUrl[] = new String[]{DEFAULT_VERTEX_SHADER},
-                fragmentUrl[] = new String[]{DEFAULT_FRAGMENT_SHADER};
-        return createShaderProgram(gl, vertexUrl, fragmentUrl);
-    }
-
-    /**
-     * Creates, compiles and links shader program given by <code>vertexSources
-     * </code> and fragmentSources.
-     * @param gl                GL instance.
-     * @param vertexSources     Array of URLs of vertex program.
-     * @param fragmentSources   Array of URLs of fragment program.
-     * @return ShaderProgram instance
-     */
-    @Deprecated
-    public ShaderProgram createShaderProgram(GL gl, String[] vertexUrls,
-            String[] fragmentUrls) {
-        ShaderProgramBuilder shaderBuilder = new ShaderProgramBuilder();
-        FileUtil fileutil = FileUtil.getInstance();
-        String source;
-
-        for (String url : vertexUrls) {
-            URL resource = ResourceGetter.getResource(url);
-            source = fileutil.read(resource);
-            Log.log("Shader source (vert): " + url);
-            shaderBuilder.addShaderSource(ShaderType.VERTEX, source, url);
+    private void useValues(GL gl, ShaderProgram.ShaderProgramInterface iface, JSONObject uniforms, JSONObject attributes) {
+        if (uniforms != null) {
+            for (String name : (Set<String>) uniforms.keySet()) {
+                Object value = uniforms.get(name);
+                iface.uniform(gl, name, value);
+            }
         }
-
-        for (String url : fragmentUrls) {
-            URL resource = ResourceGetter.getResource(url);
-            source = fileutil.read(resource);
-            Log.log("Shader source (frag): " + url);
-            shaderBuilder.addShaderSource(ShaderType.FRAGMENT, source, url);
+        if (attributes != null) {
+            for (String name : (Set<String>) uniforms.keySet()) {
+                Object value = uniforms.get(name);
+                iface.attribute(gl, name, value);
+            }
         }
-
-        Log.log("Default shader program loaded, running build...");
-        return shaderBuilder.buildShaderProgram(gl);
     }
 }

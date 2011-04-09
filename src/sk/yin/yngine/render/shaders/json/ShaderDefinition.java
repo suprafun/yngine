@@ -1,19 +1,21 @@
 package sk.yin.yngine.render.shaders.json;
 
 import java.util.List;
+import org.json.simple.JSONObject;
 
 /**
  * 
  * @author Yin
  */
 public interface ShaderDefinition {
-    public String getVersion();
-    public String getDisplay();
-    public List<String> getDeps();
+    public String version();
+    public String display();
+    public List<String> deps();
+    public JSONObject defaults(String string);
 }
 
-interface WrittableShaderDefinition {
-    public void setVersion(String version);
-    public void setDisplay(String display);
-    public void setDeps(List<String> deps);
+interface MutableShaderDefinition {
+    public void version(String version);
+    public void display(String display);
+    public void deps(List<String> deps);
 }
