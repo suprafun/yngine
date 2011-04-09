@@ -17,8 +17,6 @@ import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 import com.sun.opengl.util.texture.Texture;
-import java.net.URL;
-import java.util.List;
 import java.util.logging.Logger;
 import sk.yin.yngine.scene.generators.SphereModelGenerator;
 import sk.yin.yngine.geometry.Model;
@@ -32,10 +30,10 @@ import sk.yin.yngine.geometry.Point3f;
 import sk.yin.yngine.particlesystem.ParticleUnit;
 import sk.yin.yngine.particlesystem.SimpleConfig;
 import sk.yin.yngine.particlesystem.SimpleFactory;
+import sk.yin.yngine.render.config.AnisotropicConfig;
 import sk.yin.yngine.render.lights.MaterialDef;
 import sk.yin.yngine.render.shaders.ShaderFactory;
 import sk.yin.yngine.render.shaders.ShaderProgram;
-import sk.yin.yngine.resources.ResourceGetter;
 import sk.yin.yngine.scene.GenericLightNode;
 import sk.yin.yngine.scene.GenericLightNode.LightType;
 import sk.yin.yngine.scene.io.TextureLoader;
@@ -140,7 +138,7 @@ public class GLRenderer implements GLEventListener {
 
         // Textures
         if (texture == null) {
-            if(textures == null || textures.length == 0) {
+            if (textures == null || textures.length == 0) {
                 texture = setupTexture(gl);
             } else {
                 texture = textures[0];
@@ -301,39 +299,21 @@ public class GLRenderer implements GLEventListener {
      * @return
      */
     private Texture setupTexture(GL gl) {
-        
-        String filenames[] = new String[]{
-            "tex07.png",
-            "tex06.2.png",
-            "tex05-c.png",
-            "tex05.png",
-            "tex04.2.png",
-            "tex04.png",
-            "tex03.png",
-            "tex2.png",
-            "tex1.png"};
-        List<URL> urls = ResourceGetter.getResources(filenames);
 
-        textures = new Texture[urls.size()];
-        int i = 0;
-        for (URL url : urls) {
-            texture = TextureLoader.getInstance().load(url);
-            texture.setTexParameteri(GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
-            texture.setTexParameteri(GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
-            texture.setTexParameteri(GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
-            texture.setTexParameteri(GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR);
-            textures[i++] = texture;
-        }
-        if (gl.isExtensionAvailable("GL_EXT_texture_filter_anisotropic")) {
-            float max[] = new float[1];
-            gl.glGetFloatv(GL.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, max, 0);
+        AnisotropicConfig.instance().setMaxAnisotropy(gl);
 
-            Log.log("Enabling anisotropic filtering: " + max[0] + "X");
-            gl.glTexParameterf(GL.GL_TEXTURE_2D,
-                    GL.GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                    max[0]);
-        }
-        return texture;
+        textures = TextureLoader.getInstance().loadResource(new String[]{
+                    "tex07.png",
+                    "tex06.2.png",
+                    "tex05-c.png",
+                    "tex05.png",
+                    "tex04.2.png",
+                    "tex04.png",
+                    "tex03.png",
+                    "tex2.png",
+                    "tex1.png"});
+
+        return textures[0];
     }
 
     /**
