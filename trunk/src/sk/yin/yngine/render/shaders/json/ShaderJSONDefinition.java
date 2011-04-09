@@ -22,16 +22,24 @@ public class ShaderJSONDefinition implements ShaderDefinition {
         this.shader = shader;
     }
 
-    public String getVersion() {
+    public String version() {
         return (String) shader.get("version");
     }
 
-    public String getDisplay() {
+    public String display() {
         return (String) shader.get("display");
     }
 
-    public List<String> getDeps() {
+    public List<String> deps() {
         return (List<String>) shader.get("deps");
+    }
+
+    public JSONObject defaults(String variableType) {
+        JSONObject defaults = (JSONObject) shader.get("defaults");
+        if (defaults != null) {
+            return (JSONObject) defaults.get(variableType);
+        }
+        return null;
     }
 
     public static ShaderDefinition loadShader(URL url) throws IOException {

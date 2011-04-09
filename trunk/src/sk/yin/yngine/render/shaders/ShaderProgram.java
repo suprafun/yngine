@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.media.opengl.GL;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.json.simple.JSONValue;
 import sk.yin.yngine.util.Log;
 
 /**
@@ -96,38 +97,58 @@ public class ShaderProgram {
 
     public interface ShaderProgramInterface {
 
-        public boolean setUniform(GL gl, String name, Object value);
+        public void uniform(GL gl, String name, Object value);
 
-        public boolean setUniform(GL gl, String string, boolean value);
+        public void attribute(GL gl, String name, Object value);
 
-        public boolean setUniform(GL gl, String string, int value);
     }
 
     private class ShaderProgramInterfaceImpl implements ShaderProgramInterface {
 
         private Map<String, Integer> uniformLocations = new HashMap<String, Integer>();
+        private Map<String, Integer> attributeLocations = new HashMap<String, Integer>();
 
-        public boolean setUniform(GL gl, String name, Object value) {
-            if (value instanceof Integer) {
-                return setUniform(gl, name, ((Integer) value).intValue());
-            }
-            return false;
-        }
-
-        public boolean setUniform(GL gl, String name, int value) {
+        public void uniform(GL gl, String name, Object value) {
             int loc = getUniformLocation(name, gl);
             if (loc >= 0) {
-                gl.glUniform1i(loc, value);
-                return true;
+                if (value instanceof Integer) {
+                    setUniform(gl, loc, ((Integer) value).intValue());
+                } else if (value instanceof Float) {
+                    setUniform(gl, loc, ((Float) value).floatValue());
+                } else if (value instanceof Boolean) {
+                    setUniform(gl, loc, ((Boolean)value).booleanValue());
+                }
             } else {
-                Log.log("Shader Program Interface has no parameter: " + name);
+                Log.log("Shader Program Interface has no uniform: " + name);
             }
-            return false;
+        }
+
+        public void attribute(GL gl, String name, Object value) {
+            int loc = getUniformLocation(name, gl);
+            if (loc >= 0) {
+                if (value instanceof Integer) {
+                    setAttribute(gl, loc, ((Integer) value).intValue());
+                } else if (value instanceof Float) {
+                    setAttribute(gl, loc, ((Float) value).floatValue());
+                } else if (value instanceof Boolean) {
+                    setAttribute(gl, loc, ((Boolean)value).booleanValue());
+                }
+            } else {
+                Log.log("Shader Program Interface has no attribute: " + name);
+            }
+        }
+
+        private void setUniform(GL gl, int location, int value) {
+            gl.glUniform1i(location, value);
+        }
+
+        private void setUniform(GL gl, int location, float value) {
+            gl.glUniform1f(location, value);
         }
 
         // TODO(yin): Find how uniform bools are set.
-        public boolean setUniform(GL gl, String name, boolean value) {
-            return setUniform(gl, name, value ? 1 : 0);
+        public void setUniform(GL gl, int location, boolean value) {
+            setUniform(gl, location, value ? 1 : 0);
         }
 
         private int getUniformLocation(String name, GL gl) {
@@ -136,6 +157,28 @@ public class ShaderProgram {
             } else {
                 int ret = gl.glGetUniformLocation(program, name);
                 uniformLocations.put(name, ret);
+                return ret;
+            }
+        }
+
+        private void setAttribute(GL gl, int location, int value) {
+            gl.glVertexAttrib1s(location, (short) value);
+        }
+
+        private void setAttribute(GL gl, int location, float value) {
+            gl.glVertexAttrib1f(location, value);
+        }
+
+        public void setAttribute(GL gl, int location, boolean value) {
+            setAttribute(gl, location, value ? 1 : 0);
+        }
+
+        private int getAttributeLocation(String name, GL gl) {
+            if (attributeLocations.containsKey(name)) {
+                return attributeLocations.get(name);
+            } else {
+                int ret = gl.glGetAttribLocation(program, name);
+                attributeLocations.put(name, ret);
                 return ret;
             }
         }

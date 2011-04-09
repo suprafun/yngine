@@ -59,13 +59,13 @@ public class Model {
         if (texture != null && hasTexCoords) {
             texture.bind(gl);
             if(iface != null) {
-                iface.setUniform(gl, "TexUnit0", 0);
-                iface.setUniform(gl, "texFunc0", 1 /*TEX_MODULATE*/);
-                iface.setUniform(gl, "texEnable0", 1);
+                iface.uniform(gl, "TexUnit0", 0);
+                iface.uniform(gl, "texFunc0", 1 /*TEX_MODULATE*/);
+                iface.uniform(gl, "texEnable0", 1);
             }
         } else {
             if(iface != null)
-                iface.setUniform(gl, "texEnable0", false);
+                iface.uniform(gl, "texEnable0", false);
 
             gl.glDisable(GL.GL_TEXTURE_2D);
         }
