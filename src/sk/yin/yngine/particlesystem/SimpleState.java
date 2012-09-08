@@ -2,6 +2,7 @@ package sk.yin.yngine.particlesystem;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import sk.yin.yngine.geometry.Point3f;
 
 /**

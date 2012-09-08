@@ -4,9 +4,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import sk.yin.yngine.scene.attributes.ISceneAttribute;
+
 import sk.yin.yngine.scene.ISceneNode;
 import sk.yin.yngine.scene.SceneGraph;
+import sk.yin.yngine.scene.attributes.ISceneAttribute;
 
 /**
  * Used to generate different parts of scene graph.

@@ -2,6 +2,7 @@ package sk.yin.yngine.scripts.jython;
 
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
+
 import sk.yin.yngine.util.Log;
 
 /**
@@ -13,7 +14,8 @@ import sk.yin.yngine.util.Log;
  */
 public class JythonConnector {
 
-    private String filename;
+    private static final String SCRIPT_FOLDER = "src/sk/yin/yngine/scripts";
+	private String filename;
     private PythonInterpreter python = null;
 
     public JythonConnector(String filename) {
@@ -39,7 +41,7 @@ public class JythonConnector {
 
     public void run() {
         try {
-            python().execfile("../scripts/jython/" + filename);
+            python().execfile(SCRIPT_FOLDER + "/jython/" + filename);
         } catch (Exception ex) {
             // TODO(yin): Add exception handling for script.
             Log.log("Python exception has been caught");

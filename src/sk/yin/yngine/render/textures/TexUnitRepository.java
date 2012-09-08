@@ -1,6 +1,6 @@
 package sk.yin.yngine.render.textures;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 /**
  * @author Yin
@@ -8,7 +8,7 @@ import javax.media.opengl.GL;
 public class TexUnitRepository {
     private static final int FREE = -1;
     private static TexUnitRepository instance = null;
-    private int texUnits[] = new int[GL.GL_MAX_LIGHTS];
+    private int texUnits[] = new int[GL2.GL_MAX_LIGHTS];
 
     public static TexUnitRepository instance() {
         if (instance == null) {
@@ -26,8 +26,8 @@ public class TexUnitRepository {
         for (int i = 0; i < texUnits.length; i++) {
             if (texUnits[i] == FREE) {
                 texUnits[i] = 1;
-                // OpenGL texUnits map to successive numeric values.
-                return GL.GL_TEXTURE0 + i;
+                // OpenGL2 texUnits map to successive numeric values.
+                return GL2.GL_TEXTURE0 + i;
             }
         }
         return -1;
@@ -35,7 +35,7 @@ public class TexUnitRepository {
 
     public int release(int glTexUnit) {
         if (isGLTextureUnit(glTexUnit)) {
-            int index = glTexUnit - GL.GL_TEXTURE0;
+            int index = glTexUnit - GL2.GL_TEXTURE0;
             int ret = texUnits[index];
             texUnits[index] = FREE;
             return ret;
@@ -44,7 +44,7 @@ public class TexUnitRepository {
     }
 
     protected static boolean isGLTextureUnit(int glTexUnit) {
-        return glTexUnit >= GL.GL_TEXTURE0
-                && glTexUnit < (GL.GL_TEXTURE0 + GL.GL_MAX_TEXTURE_UNITS);
+        return glTexUnit >= GL2.GL_TEXTURE0
+                && glTexUnit < (GL2.GL_TEXTURE0 + GL2.GL_MAX_TEXTURE_UNITS);
     }
 }

@@ -1,7 +1,8 @@
 package sk.yin.yngine.render.textures;
 
-import com.sun.opengl.util.texture.Texture;
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+
+import com.jogamp.opengl.util.texture.Texture;
 
 /**
  *
@@ -15,18 +16,18 @@ public class PlainVanilaTexture {
         this.texture = texture;
     }
 
-    public int bind(GL gl) {
+    public int bind(GL2 gl) {
         if(glTexUnit < 0)
             glTexUnit = TexUnitRepository.instance().allocate();
         //gl.glActiveTexture(glTexUnit);
-        texture.enable();
-        texture.bind();
+        texture.enable(gl);
+        texture.bind(gl);
         return 0;
     }
 
-    public void unbind(GL gl) {
+    public void unbind(GL2 gl) {
         //gl.glActiveTexture(glTexUnit);
-        texture.disable();
+        texture.disable(gl);
         return;
     }
 
@@ -35,7 +36,7 @@ public class PlainVanilaTexture {
     }
 
     public int texUnit() {
-        return glTexUnit - GL.GL_TEXTURE0;
+        return glTexUnit - GL2.GL_TEXTURE0;
     }
 
     @Override

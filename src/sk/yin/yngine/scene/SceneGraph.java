@@ -1,8 +1,9 @@
 package sk.yin.yngine.scene;
 
-import sk.yin.yngine.scene.camera.LookAtCamera;
+import javax.media.opengl.GL2;
+
 import sk.yin.yngine.scene.attributes.ISceneAttribute;
-import javax.media.opengl.GL;
+import sk.yin.yngine.scene.camera.LookAtCamera;
 
 /**
  * Class representing the main anchor, or root of the scene graph.
@@ -13,7 +14,7 @@ public class SceneGraph {
     private ISceneNode root = new GenericSceneNode(new ISceneAttribute[] {});
     private LookAtCamera camera;
 
-    public void frame(GL gl, float td) {
+    public void frame(GL2 gl, float td) {
         root.update(td);
 
         if(camera != null)

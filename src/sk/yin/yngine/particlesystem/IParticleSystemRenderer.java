@@ -1,6 +1,6 @@
 package sk.yin.yngine.particlesystem;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 /**
  *
@@ -8,5 +8,5 @@ import javax.media.opengl.GL;
  */
 public interface IParticleSystemRenderer {
     public void configure(IParticleSystemConfiguration config);
-    public void render(GL gl, IParticleSystemState state);
+    public void render(GL2 gl, IParticleSystemState state);
 }

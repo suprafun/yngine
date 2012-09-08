@@ -5,8 +5,7 @@
 
 package sk.yin.yngine.render.lights;
 
-import javax.media.opengl.GL;
-import sk.yin.yngine.util.Log;
+import javax.media.opengl.GL2;
 
 /**
  *
@@ -24,7 +23,7 @@ import sk.yin.yngine.util.Log;
         Full(1.0f, 1.0f, 1.0f, 32.0f, 1.0f, 255, 255, 255),
         Half(0.5f, 0.5f, 0.5f, 16.0f, 1.0f, 255, 255, 255);
         public final float ambient[], diffuse[], specular[], shininess, briliance, c[];
-        public static final int GL_FACE = GL.GL_FRONT;
+        public static final int GL_FACE = GL2.GL_FRONT;
 
         MaterialDef(float ambient, float diffuse, float specular, float shinines,
                 float brilliance, int r, int g, int b) {
@@ -43,11 +42,11 @@ import sk.yin.yngine.util.Log;
                     new float[]{(float) r / 255, (float) g / 255, (float) b / 512, 1.0f};
         }
 
-        public void use(GL gl) {
-            gl.glMaterialfv(GL_FACE, GL.GL_AMBIENT, ambient, 0);
-            gl.glMaterialfv(GL_FACE, GL.GL_DIFFUSE, diffuse, 0);
-            gl.glMaterialfv(GL_FACE, GL.GL_SPECULAR, specular, 0);
-            gl.glMaterialf(GL_FACE, GL.GL_SHININESS, shininess);
+        public void use(GL2 gl) {
+            gl.glMaterialfv(GL_FACE, GL2.GL_AMBIENT, ambient, 0);
+            gl.glMaterialfv(GL_FACE, GL2.GL_DIFFUSE, diffuse, 0);
+            gl.glMaterialfv(GL_FACE, GL2.GL_SPECULAR, specular, 0);
+            gl.glMaterialf(GL_FACE, GL2.GL_SHININESS, shininess);
         }
     }
 

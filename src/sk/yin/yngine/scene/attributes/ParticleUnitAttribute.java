@@ -1,6 +1,7 @@
 package sk.yin.yngine.scene.attributes;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+
 import sk.yin.yngine.particlesystem.ParticleUnit;
 
 /**
@@ -25,7 +26,7 @@ public class ParticleUnitAttribute implements ISceneAttribute {
         unit.update(deltaTime);
     }
 
-    public void render(GL gl, RenderStage stage) {
+    public void render(GL2 gl, RenderStage stage) {
         // TODO(yin): Add RENDER_TRANSPARENT to RenderStage enum.
         if(stage == RenderStage.RENDER)
             unit.render(gl);

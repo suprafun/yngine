@@ -1,17 +1,16 @@
 package sk.yin.yngine.scene.generators;
 
-import sk.yin.yngine.scene.decorators.BaseDecorator;
-import javax.vecmath.TexCoord2f;
-import sk.yin.yngine.geometry.Model;
-import sk.yin.yngine.geometry.Triple;
-import sk.yin.yngine.geometry.Point3f;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import java.util.List;
 import java.util.Map;
+
 import javax.vecmath.Vector3f;
-import sk.yin.yngine.scene.generators.ModelBuilder.Decorator;
+
+import sk.yin.yngine.geometry.Model;
+import sk.yin.yngine.geometry.Point3f;
+import sk.yin.yngine.geometry.Triple;
+import sk.yin.yngine.scene.decorators.BaseDecorator;
 
 /**
  * Creates mesh model of a sphere interpolated from a base mesh

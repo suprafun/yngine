@@ -3,8 +3,11 @@ package sk.yin.yngine.render.shaders;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
-import javax.media.opengl.GL;
+
+import javax.media.opengl.GL2;
+
 import org.json.simple.JSONObject;
+
 import sk.yin.yngine.render.shaders.ShaderProgramBuilder.ShaderType;
 import sk.yin.yngine.render.shaders.json.ShaderDefinition;
 import sk.yin.yngine.render.shaders.json.ShaderJSONDefinition;
@@ -37,22 +40,22 @@ public class ShaderFactory {
 
     /**
      * Creates, compiles and links a shader program from shader library.
-     * @param gl GL instance
+     * @param gl GL2 instance
      * @param name Name of the shader to load.
      * @return ShaderProgram instance.
      */
-    public ShaderProgram loadShader(GL gl, String name) {
+    public ShaderProgram loadShader(GL2 gl, String name) {
         return loadShader(gl, name, true);
     }
 
     /**
      * Creates, compiles and links a shader program from shader library.
-     * @param gl GL instance
+     * @param gl GL2 instance
      * @param name Name of the shader to load.
      * @param defaultValues Use default values, if defined in shader definition.
      * @return ShaderProgram instance.
      */
-    public ShaderProgram loadShader(GL gl, String name, boolean defaultValues) {
+    public ShaderProgram loadShader(GL2 gl, String name, boolean defaultValues) {
         String path = SHADER_LIB_PATH + '/' + name + ".shader.json";
         Log.log("Loading shader from: " + path);
 
@@ -76,11 +79,11 @@ public class ShaderFactory {
     /**
      * Creates, compiles and links shader program sources defined in
      * <code>def</code>.
-     * @param gl    GL instance.
+     * @param gl    GL2 instance.
      * @param def   Definition of the shader.
      * @return ShaderProgram instance
      */
-    public ShaderProgram createShaderProgram(GL gl, ShaderDefinition def) {
+    public ShaderProgram createShaderProgram(GL2 gl, ShaderDefinition def) {
         ShaderProgramBuilder shaderBuilder = new ShaderProgramBuilder();
         String source;
 
@@ -113,12 +116,12 @@ public class ShaderFactory {
         return FileUtil.getInstance().read(resource);
     }
 
-    private void useDefaultValues(GL gl, ShaderProgram program, ShaderDefinition def) {
+    private void useDefaultValues(GL2 gl, ShaderProgram program, ShaderDefinition def) {
         ShaderProgram.ShaderProgramInterface iface = program.use(gl);
         useValues(gl, iface, def.defaults("uniform"), def.defaults("attribute"));
     }
 
-    private void useValues(GL gl, ShaderProgram.ShaderProgramInterface iface, JSONObject uniforms, JSONObject attributes) {
+    private void useValues(GL2 gl, ShaderProgram.ShaderProgramInterface iface, JSONObject uniforms, JSONObject attributes) {
         if (uniforms != null) {
             for (String name : (Set<String>) uniforms.keySet()) {
                 Object value = uniforms.get(name);

@@ -1,6 +1,7 @@
 package sk.yin.yngine.scene.attributes;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+
 import sk.yin.yngine.geometry.Model;
 import sk.yin.yngine.render.lights.MaterialDef;
 
@@ -22,7 +23,7 @@ public class GeometryAttribute implements IGeometryAttribute {
         // There is nothing to update
     }
 
-    public void render(GL gl, RenderStage stage) {
+    public void render(GL2 gl, RenderStage stage) {
         if(model != null && stage == RenderStage.RENDER) {
             if(surface != null) {
                 surface.use(gl);

@@ -1,7 +1,8 @@
 package sk.yin.yngine.main;
 
-import com.sun.opengl.util.texture.Texture;
 import sk.yin.yngine.geometry.Model;
+
+import com.jogamp.opengl.util.texture.Texture;
 
 class CycleTexturesStrategy implements IGLRendererStrategy {
 

@@ -1,6 +1,7 @@
 package sk.yin.yngine.render.config;
 
 import javax.media.opengl.GL;
+
 import sk.yin.yngine.util.Log;
 
 /**

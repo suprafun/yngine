@@ -1,11 +1,10 @@
 package sk.yin.yngine.scene.decorators;
 
-import sk.yin.yngine.scene.decorators.BaseDecorator;
 import java.util.HashMap;
 import java.util.Map;
+
 import sk.yin.yngine.geometry.Point3f;
 import sk.yin.yngine.geometry.Triple;
-import sk.yin.yngine.util.Log;
 
 /**
  * Cycles red color on X axis, green on Y, blue on Z, given the vertex

@@ -1,13 +1,14 @@
 package sk.yin.yngine.scene.generators;
 
-import sk.yin.yngine.geometry.Model;
-import sk.yin.yngine.geometry.Triple;
-import sk.yin.yngine.geometry.Point3f;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.vecmath.TexCoord2f;
 import javax.vecmath.Vector3f;
-import sk.yin.yngine.util.Log;
+
+import sk.yin.yngine.geometry.Model;
+import sk.yin.yngine.geometry.Point3f;
+import sk.yin.yngine.geometry.Triple;
 
 public class ModelBuilder {
     private List<Point3f> vertices = new ArrayList<Point3f>();

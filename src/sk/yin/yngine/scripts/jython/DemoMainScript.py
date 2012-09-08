@@ -11,7 +11,7 @@ def setupTextures(gl):
     """Loads a texture and sets up texturing."""
     AnisotropicConfig.instance().setMaxAnisotropy(gl)
 
-    textures = TextureLoader.getInstance().loadResource([
+    textures = TextureLoader.getInstance().loadResource(gl, [
                                                         "tex07.png",
                                                         "tex06.2.png",
                                                         "tex05-c.png",

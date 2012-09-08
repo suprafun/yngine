@@ -1,11 +1,10 @@
 package sk.yin.yngine.scene.attributes;
 
-import com.bulletphysics.linearmath.Transform;
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Vector3f;
-import sk.yin.yngine.scene.attributes.ISceneAttribute.RenderStage;
-import sk.yin.yngine.util.Log;
+
+import com.bulletphysics.linearmath.Transform;
 
 /**
  * Static scene transformation. Can be changed anytime from outside, but won't
@@ -32,7 +31,7 @@ public class TransformAttribute implements ITransformAttribute {
     }
 
     @Override
-    public void render(GL gl, RenderStage stage) {
+    public void render(GL2 gl, RenderStage stage) {
         switch(stage) {
             case PRERENDER:
                 transform(gl);
@@ -43,7 +42,7 @@ public class TransformAttribute implements ITransformAttribute {
         }
     }
 
-    public void transform(GL gl) {
+    public void transform(GL2 gl) {
         if (transform != null) {
             Vector3f origin = transform.origin;
             Matrix3f basis = transform.basis;
@@ -63,7 +62,7 @@ public class TransformAttribute implements ITransformAttribute {
         }
     }
 
-    public void transformEnd(GL gl) {
+    public void transformEnd(GL2 gl) {
         gl.glPopMatrix();
     }
 

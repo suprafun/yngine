@@ -1,11 +1,12 @@
 package sk.yin.yngine.scene.attributes;
 
+import javax.media.opengl.GL2;
+import javax.vecmath.Matrix3f;
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.Transform;
-import javax.media.opengl.GL;
-import javax.vecmath.Matrix3f;
-import javax.vecmath.Vector3f;
 
 /**
  * Scene transformation updated from JBullet physics engine. Itself extends
@@ -51,7 +52,7 @@ public class PhysicsAttribute extends DefaultMotionState
     }
 
     @Override
-    public void render(GL gl, RenderStage stage) {
+    public void render(GL2 gl, RenderStage stage) {
         switch(stage) {
             case PRERENDER:
                 transform(gl);
@@ -62,7 +63,7 @@ public class PhysicsAttribute extends DefaultMotionState
         }
     }
 
-    public void transform(GL gl) {
+    public void transform(GL2 gl) {
         if (graphicsWorldTrans != null) {
             Vector3f origin = graphicsWorldTrans.origin;
             Matrix3f basis = graphicsWorldTrans.basis;
@@ -82,7 +83,7 @@ public class PhysicsAttribute extends DefaultMotionState
         }
     }
 
-    public void transformEnd(GL gl) {
+    public void transformEnd(GL2 gl) {
         gl.glPopMatrix();
     }
 

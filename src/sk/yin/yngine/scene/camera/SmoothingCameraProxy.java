@@ -1,6 +1,6 @@
 package sk.yin.yngine.scene.camera;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.vecmath.Vector3f;
 
 /**
@@ -38,12 +38,12 @@ public class SmoothingCameraProxy extends LookAtCamera {
     }
 
     @Override
-    public void transform(GL gl) {
+    public void transform(GL2 gl) {
         camera.transform(gl);
     }
 
     @Override
-    public void transformEnd(GL gl) {
+    public void transformEnd(GL2 gl) {
         camera.transformEnd(gl);
     }
 }

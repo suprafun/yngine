@@ -4,8 +4,11 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import javax.media.opengl.GL;
+
+import javax.media.opengl.GL2;
+
 import org.apache.commons.lang.StringUtils;
+
 import sk.yin.yngine.util.Log;
 
 /**
@@ -27,8 +30,8 @@ public class ShaderProgramBuilder {
      */
     public enum ShaderType {
 
-        VERTEX(GL.GL_VERTEX_SHADER),
-        FRAGMENT(GL.GL_FRAGMENT_SHADER);
+        VERTEX(GL2.GL_VERTEX_SHADER),
+        FRAGMENT(GL2.GL_FRAGMENT_SHADER);
         public final int glShaderType;
 
         private ShaderType(int glShaderType) {
@@ -73,7 +76,7 @@ public class ShaderProgramBuilder {
         return (new StringBuilder().append("VS:[").append(StringUtils.join(vertexShaderOrigins, ",")).append("]-").append("FS:[").append(StringUtils.join(fragmentShaderOrigins, ",")).append("]")).toString();
     }
 
-    public ShaderProgram buildShaderProgram(GL gl) {
+    public ShaderProgram buildShaderProgram(GL2 gl) {
         int program = gl.glCreateProgramObjectARB(),
                 vs[] = compileShaderSources(gl, ShaderType.VERTEX, program),
                 fs[] = compileShaderSources(gl, ShaderType.FRAGMENT, program);
@@ -83,7 +86,7 @@ public class ShaderProgramBuilder {
         return new ShaderProgram(program, vs, fs, getOrigin());
     }
 
-    protected int[] compileShaderSources(GL gl, ShaderType type, int program) {
+    protected int[] compileShaderSources(GL2 gl, ShaderType type, int program) {
         List<String> sources = getSources(type), origins = getOrigins(type);
         int shaders[] = new int[sources.size()];
         for (int i = 0, l = sources.size(); i < l; i++) {
@@ -118,7 +121,7 @@ public class ShaderProgramBuilder {
         return null;
     }
 
-    protected void printBuildInfoLog(GL gl, int obj, BuildStage stage,
+    protected void printBuildInfoLog(GL2 gl, int obj, BuildStage stage,
             ShaderType shaderType, String origin) {
         IntBuffer l = IntBuffer.allocate(1),
                 n = IntBuffer.allocate(1);
@@ -128,7 +131,7 @@ public class ShaderProgramBuilder {
 
         switch (stage) {
             case COMPILE:
-                gl.glGetShaderiv(obj, GL.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
+                gl.glGetShaderiv(obj, GL2.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
                 len = l.get(0);
                 if (len > 0) {
                     log = ByteBuffer.allocate(len);
@@ -137,7 +140,7 @@ public class ShaderProgramBuilder {
                 break;
 
             case LINK:
-                gl.glGetProgramiv(obj, GL.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
+                gl.glGetProgramiv(obj, GL2.GL_OBJECT_INFO_LOG_LENGTH_ARB, l);
                 len = l.get(0);
                 if (len > 0) {
                     log = ByteBuffer.allocate(len);

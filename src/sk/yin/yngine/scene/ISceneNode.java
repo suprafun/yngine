@@ -1,7 +1,8 @@
 package sk.yin.yngine.scene;
 
+import javax.media.opengl.GL2;
+
 import sk.yin.yngine.scene.attributes.ISceneAttribute;
-import javax.media.opengl.GL;
 
 /**
  * Scene node in scene graph. Every node has attributes and children. When
@@ -12,7 +13,7 @@ import javax.media.opengl.GL;
  */
 public interface ISceneNode {
     public void update(float deltaTime);
-    public void render(GL gl);
+    public void render(GL2 gl);
 
     // TODO(mgagyi): Move event handling to INodeListens (... or something)
     public void onAdded(SceneGraph graph, ISceneAttribute parent);

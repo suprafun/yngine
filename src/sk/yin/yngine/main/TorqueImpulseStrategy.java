@@ -1,8 +1,10 @@
 package sk.yin.yngine.main;
 
-import com.bulletphysics.linearmath.Transform;
 import javax.vecmath.Vector3f;
+
 import sk.yin.yngine.util.Log;
+
+import com.bulletphysics.linearmath.Transform;
 
 /**
  * Makes forced object hunt a target object by applying torque implulse.
