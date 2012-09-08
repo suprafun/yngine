@@ -1,6 +1,6 @@
 package sk.yin.yngine.particlesystem;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 /**
  * A Particle Unit is a black-box to individual particle system simulations.
@@ -32,7 +32,7 @@ public class ParticleUnit {
      * Renders this particle unit.
      * @param gl
      */
-    public void render(GL gl) {
+    public void render(GL2 gl) {
         renderer.render(gl, state);
     }
 

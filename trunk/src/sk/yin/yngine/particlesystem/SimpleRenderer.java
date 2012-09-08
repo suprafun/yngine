@@ -1,6 +1,7 @@
 package sk.yin.yngine.particlesystem;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+
 import sk.yin.yngine.geometry.Point3f;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 
@@ -16,12 +17,12 @@ public class SimpleRenderer implements IParticleSystemRenderer {
         // Do nothing
     }
 
-    public void render(GL gl, SimpleState state) {
+    public void render(GL2 gl, SimpleState state) {
         Point3f ps[] = state.particles(),
                 vs[] = state.velocities();
 
         preRender(gl);
-        gl.glBegin(GL.GL_POINTS);
+        gl.glBegin(GL2.GL_POINTS);
         for(int i = 0, c = ps.length; i < c; i++) {
             Point3f color = ps[i].copy().divide(40.0f).add(0.75f);
             gl.glColor3f(color.r(), color.g(), color.b());
@@ -31,7 +32,7 @@ public class SimpleRenderer implements IParticleSystemRenderer {
         postRender(gl);
     }
 
-    public void render(GL gl, IParticleSystemState state) {
+    public void render(GL2 gl, IParticleSystemState state) {
         if(state instanceof SimpleState) {
             SimpleState ss = (SimpleState) state;
             render(gl, ss);
@@ -40,15 +41,15 @@ public class SimpleRenderer implements IParticleSystemRenderer {
         }
     }
 
-    protected void preRender(GL gl) {
+    protected void preRender(GL2 gl) {
         ShaderProgram.unuseCurrent(gl);
         gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        gl.glDisable(GL.GL_LIGHTING);
+        gl.glDisable(GL2.GL_LIGHTING);
         gl.glPointSize(1.5f);
     }
 
-    protected void postRender(GL gl) {
-        gl.glEnable(GL.GL_LIGHTING);
+    protected void postRender(GL2 gl) {
+        gl.glEnable(GL2.GL_LIGHTING);
         gl.glPointSize(1.0f);
     }
 }

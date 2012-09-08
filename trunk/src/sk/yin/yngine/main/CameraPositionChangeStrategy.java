@@ -1,6 +1,7 @@
 package sk.yin.yngine.main;
 
 import javax.vecmath.Vector3f;
+
 import sk.yin.yngine.scene.GenericSceneNode;
 import sk.yin.yngine.scene.attributes.PhysicsAttribute;
 import sk.yin.yngine.scene.camera.LookAtCamera;

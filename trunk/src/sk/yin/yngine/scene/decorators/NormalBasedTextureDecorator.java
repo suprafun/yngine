@@ -1,10 +1,11 @@
 package sk.yin.yngine.scene.decorators;
 
-import sk.yin.yngine.scene.decorators.BaseDecorator;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.vecmath.Matrix3f;
 import javax.vecmath.TexCoord2f;
+
 import sk.yin.yngine.geometry.Point3f;
 import sk.yin.yngine.geometry.Triple;
 

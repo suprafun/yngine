@@ -1,6 +1,7 @@
 package sk.yin.yngine.main;
 
 import javax.vecmath.Vector3f;
+
 import sk.yin.yngine.scene.GenericLightNode;
 
 /**

@@ -2,10 +2,12 @@ package sk.yin.yngine.render.shaders;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.media.opengl.GL;
+
+import javax.media.opengl.GL2;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.json.simple.JSONValue;
+
 import sk.yin.yngine.util.Log;
 
 /**
@@ -36,7 +38,7 @@ public class ShaderProgram {
         this.origin = origin;
     }
 
-    public void destroy(GL gl) {
+    public void destroy(GL2 gl) {
         if (!destroyed) {
             Log.log("Destroying shader #" + program);
             unuse(gl);
@@ -53,7 +55,7 @@ public class ShaderProgram {
         }
     }
 
-    public ShaderProgramInterface use(GL gl) {
+    public ShaderProgramInterface use(GL2 gl) {
         if (enabled && !destroyed) {
             programInUse = program;
             gl.glUseProgram(program);
@@ -66,22 +68,22 @@ public class ShaderProgram {
         return null;
     }
 
-    public void unuse(GL gl) {
+    public void unuse(GL2 gl) {
         if (programInUse == program) {
             unuseCurrent(gl);
         }
     }
 
-    public static void unuseCurrent(GL gl) {
+    public static void unuseCurrent(GL2 gl) {
         programInUse = NO_SHADER_PROGRAM;
         gl.glUseProgram(programInUse);
     }
 
-    public static void enableShaders(GL gl) {
+    public static void enableShaders(GL2 gl) {
         enabled = true;
     }
 
-    public static void disableShaders(GL gl) {
+    public static void disableShaders(GL2 gl) {
         enabled = false;
     }
 
@@ -97,9 +99,9 @@ public class ShaderProgram {
 
     public interface ShaderProgramInterface {
 
-        public void uniform(GL gl, String name, Object value);
+        public void uniform(GL2 gl, String name, Object value);
 
-        public void attribute(GL gl, String name, Object value);
+        public void attribute(GL2 gl, String name, Object value);
 
     }
 
@@ -108,7 +110,7 @@ public class ShaderProgram {
         private Map<String, Integer> uniformLocations = new HashMap<String, Integer>();
         private Map<String, Integer> attributeLocations = new HashMap<String, Integer>();
 
-        public void uniform(GL gl, String name, Object value) {
+        public void uniform(GL2 gl, String name, Object value) {
             int loc = getUniformLocation(name, gl);
             if (loc >= 0) {
                 if (value instanceof Integer) {
@@ -123,7 +125,7 @@ public class ShaderProgram {
             }
         }
 
-        public void attribute(GL gl, String name, Object value) {
+        public void attribute(GL2 gl, String name, Object value) {
             int loc = getUniformLocation(name, gl);
             if (loc >= 0) {
                 if (value instanceof Integer) {
@@ -138,20 +140,20 @@ public class ShaderProgram {
             }
         }
 
-        private void setUniform(GL gl, int location, int value) {
+        private void setUniform(GL2 gl, int location, int value) {
             gl.glUniform1i(location, value);
         }
 
-        private void setUniform(GL gl, int location, float value) {
+        private void setUniform(GL2 gl, int location, float value) {
             gl.glUniform1f(location, value);
         }
 
         // TODO(yin): Find how uniform bools are set.
-        public void setUniform(GL gl, int location, boolean value) {
+        public void setUniform(GL2 gl, int location, boolean value) {
             setUniform(gl, location, value ? 1 : 0);
         }
 
-        private int getUniformLocation(String name, GL gl) {
+        private int getUniformLocation(String name, GL2 gl) {
             if (uniformLocations.containsKey(name)) {
                 return uniformLocations.get(name);
             } else {
@@ -161,19 +163,19 @@ public class ShaderProgram {
             }
         }
 
-        private void setAttribute(GL gl, int location, int value) {
+        private void setAttribute(GL2 gl, int location, int value) {
             gl.glVertexAttrib1s(location, (short) value);
         }
 
-        private void setAttribute(GL gl, int location, float value) {
+        private void setAttribute(GL2 gl, int location, float value) {
             gl.glVertexAttrib1f(location, value);
         }
 
-        public void setAttribute(GL gl, int location, boolean value) {
+        public void setAttribute(GL2 gl, int location, boolean value) {
             setAttribute(gl, location, value ? 1 : 0);
         }
 
-        private int getAttributeLocation(String name, GL gl) {
+        private int getAttributeLocation(String name, GL2 gl) {
             if (attributeLocations.containsKey(name)) {
                 return attributeLocations.get(name);
             } else {

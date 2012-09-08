@@ -1,12 +1,14 @@
 package sk.yin.yngine.scene;
 
-import sk.yin.yngine.render.lights.GLLightRepository;
-import javax.media.opengl.GL;
+import static sk.yin.yngine.render.lights.GLLightRepository.isGLLight;
+
+import javax.media.opengl.GL2;
+import javax.media.opengl.fixedfunc.GLLightingFunc;
 import javax.vecmath.Vector3f;
+
+import sk.yin.yngine.render.lights.GLLightRepository;
 import sk.yin.yngine.render.shaders.ShaderProgram;
 import sk.yin.yngine.scene.attributes.ISceneAttribute;
-
-import static  sk.yin.yngine.render.lights.GLLightRepository.isGLLight;
 
 /**
  * General light usable for all GL core lighting models. May be
@@ -68,46 +70,46 @@ public class GenericLightNode implements ILightNode {
     /**
      * Configures the GL light with the light parameters.
      */
-    public void turnOn(GL gl, int glLight) {
+    public void turnOn(GL2 gl, int glLight) {
         if (isGLLight(glLight)) {
             gl.glEnable(glLight);
 
             if (ambient != null) {
-                gl.glLightfv(glLight, GL.GL_AMBIENT, ambient, 0);
+                gl.glLightfv(glLight, GLLightingFunc.GL_AMBIENT, ambient, 0);
             } else {
-                gl.glLightfv(glLight, GL.GL_AMBIENT, new float[]{0f, 0f, 0f, 0f}, 0);
+                gl.glLightfv(glLight, GLLightingFunc.GL_AMBIENT, new float[]{0f, 0f, 0f, 0f}, 0);
             }
             if (diffuse != null) {
-                gl.glLightfv(glLight, GL.GL_DIFFUSE, diffuse, 0);
+                gl.glLightfv(glLight, GLLightingFunc.GL_DIFFUSE, diffuse, 0);
             } else {
-                gl.glLightfv(glLight, GL.GL_DIFFUSE, new float[]{0f, 0f, 0f, 0f}, 0);
+                gl.glLightfv(glLight, GLLightingFunc.GL_DIFFUSE, new float[]{0f, 0f, 0f, 0f}, 0);
             }
             if (specular != null) {
-                gl.glLightfv(glLight, GL.GL_SPECULAR, specular, 0);
+                gl.glLightfv(glLight, GLLightingFunc.GL_SPECULAR, specular, 0);
             } else {
-                gl.glLightfv(glLight, GL.GL_SPECULAR, new float[]{0f, 0f, 0f, 0f}, 0);
+                gl.glLightfv(glLight, GLLightingFunc.GL_SPECULAR, new float[]{0f, 0f, 0f, 0f}, 0);
             }
             
-            gl.glLightf(glLight, GL.GL_CONSTANT_ATTENUATION, attenuationConstant);
-            gl.glLightf(glLight, GL.GL_LINEAR_ATTENUATION, attenuationLinear);
-            gl.glLightf(glLight, GL.GL_QUADRATIC_ATTENUATION, attenuationQuadratic);
+            gl.glLightf(glLight, GLLightingFunc.GL_CONSTANT_ATTENUATION, attenuationConstant);
+            gl.glLightf(glLight, GLLightingFunc.GL_LINEAR_ATTENUATION, attenuationLinear);
+            gl.glLightf(glLight, GLLightingFunc.GL_QUADRATIC_ATTENUATION, attenuationQuadratic);
 
             switch (type) {
                 case Directional:
-                    gl.glLightfv(glLight, GL.GL_POSITION, new float[]{
+                    gl.glLightfv(glLight, GLLightingFunc.GL_POSITION, new float[]{
                                 direction.x, direction.y, direction.z, type.w}, 0);
                     break;
                 case Point:
-                    gl.glLightfv(glLight, GL.GL_POSITION, new float[]{
+                    gl.glLightfv(glLight, GLLightingFunc.GL_POSITION, new float[]{
                                 position.x, position.y, position.z, type.w}, 0);
                     break;
                 case Spot:
-                    gl.glLightfv(glLight, GL.GL_POSITION, new float[]{
+                    gl.glLightfv(glLight, GLLightingFunc.GL_POSITION, new float[]{
                                 position.x, position.y, position.z, type.w}, 0);
-                    gl.glLightfv(glLight, GL.GL_SPOT_DIRECTION, new float[]{
+                    gl.glLightfv(glLight, GLLightingFunc.GL_SPOT_DIRECTION, new float[]{
                                 direction.x, direction.y, direction.z}, 0);
-                    gl.glLightf(glLight, GL.GL_SPOT_CUTOFF, cutoff);
-                    gl.glLightf(glLight, GL.GL_SPOT_EXPONENT, spotExp);
+                    gl.glLightf(glLight, GLLightingFunc.GL_SPOT_CUTOFF, cutoff);
+                    gl.glLightf(glLight, GLLightingFunc.GL_SPOT_EXPONENT, spotExp);
                     break;
                 default:
                     // TODO(yin): Maybe custom lights?
@@ -115,7 +117,7 @@ public class GenericLightNode implements ILightNode {
         }
     }
 
-    public void turnOff(GL gl, int glLight) {
+    public void turnOff(GL2 gl, int glLight) {
         if (isGLLight(glLight)) {
             // TODO(yin): Free Allocated GL light[i]
             gl.glDisable(glLight);
@@ -131,7 +133,7 @@ public class GenericLightNode implements ILightNode {
      * light by calling <code>turnOn</code>.
      */
     // TODO(yin): This has to be moved to renderer.
-    public void render(GL gl) {
+    public void render(GL2 gl) {
         if (glLight == -1) {
             glLight = GLLightRepository.instance().allocate();
         }
@@ -146,12 +148,12 @@ public class GenericLightNode implements ILightNode {
      * the light for debuging purposes. Except it to decome
      * deprecated in the future.
      */
-    public void renderLight(GL gl) {
-        gl.glDisable(GL.GL_LIGHTING);
+    public void renderLight(GL2 gl) {
+        gl.glDisable(GLLightingFunc.GL_LIGHTING);
         ShaderProgram.unuseCurrent(gl);
         switch (type) {
             case Directional:
-                gl.glBegin(GL.GL_LINES);
+                gl.glBegin(GL2.GL_LINES);
                 gl.glColor3f(0.0f, 0.0f, 0.0f);
                 gl.glVertex3f(0.0f, 0.0f, 0.0f);
                 gl.glColor3f(1.0f, 1.0f, 1.0f);
@@ -159,7 +161,7 @@ public class GenericLightNode implements ILightNode {
                 gl.glEnd();
                 break;
             case Point:
-                gl.glBegin(GL.GL_POINTS);
+                gl.glBegin(GL2.GL_POINTS);
                 gl.glColor3f(1.0f, 1.0f, 1.0f);
                 gl.glVertex3f(position.x, position.y, position.z);
                 gl.glEnd();
@@ -170,7 +172,7 @@ public class GenericLightNode implements ILightNode {
                 d.set(direction);
                 d.scale(4);
 
-                gl.glBegin(GL.GL_LINES);
+                gl.glBegin(GL2.GL_LINES);
                 gl.glColor3f(1.0f, 1.0f, 1.0f);
                 gl.glVertex3f(p.x, p.y, p.z);
                 gl.glColor3f(0.2f, 0.2f, 0.2f);
@@ -188,7 +190,7 @@ public class GenericLightNode implements ILightNode {
                 gl.glEnd();
 
         }
-        gl.glEnable(GL.GL_LIGHTING);
+        gl.glEnable(GLLightingFunc.GL_LIGHTING);
     }
 
     public void onAdded(SceneGraph graph, ISceneAttribute parent) {

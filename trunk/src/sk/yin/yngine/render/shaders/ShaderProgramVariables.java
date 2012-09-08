@@ -1,6 +1,6 @@
 package sk.yin.yngine.render.shaders;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 /**
  * This is an adaptor to uniform and attribute variables of shader programs.
@@ -18,7 +18,7 @@ public class ShaderProgramVariables {
         this.attributeLoctions = attributeLoctions;
     }
 
-    public void setUniform1i(GL gl, String name, int value) {
+    public void setUniform1i(GL2 gl, String name, int value) {
         int location = gl.glGetUniformLocation(0, name);
         gl.glUniform1i(location, value);
     }

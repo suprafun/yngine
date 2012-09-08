@@ -1,9 +1,10 @@
 package sk.yin.yngine.scene.camera;
 
-import sk.yin.yngine.scene.attributes.ISceneAttribute;
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 import javax.vecmath.Vector3f;
+
+import sk.yin.yngine.scene.attributes.ISceneAttribute;
 
 /**
  * Simple LookAtCamera implementation.
@@ -18,11 +19,11 @@ public class LookAtCamera implements ISceneAttribute {
         // Do nothing.
     }
 
-    public void render(GL gl, RenderStage stage) {
+    public void render(GL2 gl, RenderStage stage) {
         // TODO(yin): What about adding a SETUP and SHUTDOWN rendering stages?
     }
     
-    public void transform(GL gl) {
+    public void transform(GL2 gl) {
         gl.glPushMatrix();
         gl.glLoadIdentity();
         GLU glu = new GLU();
@@ -31,7 +32,7 @@ public class LookAtCamera implements ISceneAttribute {
                 up.x, up.y, up.z);
     }
 
-    public void transformEnd(GL gl) {
+    public void transformEnd(GL2 gl) {
         gl.glPopMatrix();
     }
 

@@ -1,6 +1,6 @@
 package sk.yin.yngine.scene.attributes;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 /**
  * Attribute of a node in scene graph. One node can be made by many attributes.
@@ -26,5 +26,5 @@ public interface ISceneAttribute {
      * @param gl
      * @param stage Rendering stage.
      */
-    public void render(GL gl, RenderStage stage);
+    public void render(GL2 gl, RenderStage stage);
 }

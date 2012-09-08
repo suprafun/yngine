@@ -5,15 +5,17 @@
  */
 package sk.yin.yngine.main;
 
-import com.sun.opengl.util.Animator;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.media.opengl.GLCanvas;
+
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLProfile;
+import javax.media.opengl.awt.GLJPanel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JFrame;
@@ -21,6 +23,8 @@ import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+
+import com.jogamp.opengl.util.Animator;
 
 /**
  *
@@ -52,7 +56,7 @@ public class SimpleGLCanvas extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 canvas.getContext().makeCurrent();
-                glRenderer.destroy(canvas.getGL());
+                glRenderer.dispose(canvas);
                 // Run this on another thread than the AWT event queue to
                 // make sure the call to Animator.stop() completes before
                 // exiting
@@ -86,7 +90,7 @@ public class SimpleGLCanvas extends JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
         JLabel label = new JLabel();
-        canvas = new GLCanvas(createGLCapabilites());
+        canvas = new GLJPanel(createGLCapabilites());
 
         label.setText("Below you see a GLCanvas");
 
@@ -120,7 +124,7 @@ public class SimpleGLCanvas extends JFrame {
      */
     private GLCapabilities createGLCapabilites() {
 
-        GLCapabilities capabilities = new GLCapabilities();
+        GLCapabilities capabilities = new GLCapabilities(GLProfile.getGL2GL3());
         capabilities.setHardwareAccelerated(true);
 
         // try to enable 2x anti aliasing - should be supported on most hardware
@@ -156,6 +160,6 @@ public class SimpleGLCanvas extends JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private GLCanvas canvas;
+    private GLJPanel canvas;
     // End of variables declaration//GEN-END:variables
 }

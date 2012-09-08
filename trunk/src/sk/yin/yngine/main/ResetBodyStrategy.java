@@ -1,10 +1,12 @@
 package sk.yin.yngine.main;
 
-import com.bulletphysics.linearmath.MotionState;
-import com.bulletphysics.linearmath.Transform;
 import javax.vecmath.Vector3f;
+
 import sk.yin.yngine.scene.attributes.PhysicsAttribute;
 import sk.yin.yngine.util.Log;
+
+import com.bulletphysics.linearmath.MotionState;
+import com.bulletphysics.linearmath.Transform;
 
 /**
  * If an object falls off the ground and reaches certain distance from
